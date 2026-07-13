@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수불부 AMDP 해부 — YCL_CO_SL_AMDP</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --biz-bg:#dafbe1; --biz-fg:#116329; --dev-bg:#ddf4ff; --dev-fg:#0550ae;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+    --key-bg:#fff8c5; --key-fg:#7d4e00; --spine:#ddf4ff; --sat:#eef2f5; --line:#6e7781;
+    --bad-bg:#ffebe9; --bad-fg:#cf222e; --good-bg:#dafbe1; --good-fg:#116329;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --biz-bg:#12261e; --biz-fg:#3fb950; --dev-bg:#0d2d4a; --dev-fg:#79c0ff;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+      --key-bg:#3b2e00; --key-fg:#e3b341; --spine:#0d2d4a; --sat:#1c2128; --line:#8b949e;
+      --bad-bg:#2d1214; --bad-fg:#ff7b72; --good-bg:#12261e; --good-fg:#3fb950;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --biz-bg:#12261e; --biz-fg:#3fb950; --dev-bg:#0d2d4a; --dev-fg:#79c0ff;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+      --key-bg:#3b2e00; --key-fg:#e3b341; --spine:#0d2d4a; --sat:#1c2128; --line:#8b949e;
+      --bad-bg:#2d1214; --bad-fg:#ff7b72; --good-bg:#12261e; --good-fg:#3fb950;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --biz-bg:#dafbe1; --biz-fg:#116329; --dev-bg:#ddf4ff; --dev-fg:#0550ae;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+    --key-bg:#fff8c5; --key-fg:#7d4e00; --spine:#ddf4ff; --sat:#eef2f5; --line:#6e7781;
+    --bad-bg:#ffebe9; --bad-fg:#cf222e; --good-bg:#dafbe1; --good-fg:#116329;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","맑은 고딕",sans-serif;
+    line-height:1.75;font-size:16px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px 120px;}
+  header.top{padding:46px 20px 30px;border-bottom:1px solid var(--border);}
+  header.top h1{font-size:1.9rem;margin:0 0 8px;}
+  header.top p{color:var(--muted);margin:4px 0;}
+  nav.toc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:26px 0;}
+  nav.toc h2{font-size:.95rem;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  nav.toc ol{margin:0;padding-left:22px;}
+  nav.toc a{color:var(--accent);text-decoration:none;} nav.toc a:hover{text-decoration:underline;}
+  h2.sec{font-size:1.5rem;margin:54px 0 8px;padding-top:12px;border-top:2px solid var(--border);}
+  h3{font-size:1.16rem;margin:30px 0 6px;}
+  h4{font-size:1rem;margin:20px 0 4px;color:var(--muted);}
+  p{margin:10px 0;}
+  code{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;padding:1px 5px;
+    font-family:"SF Mono",Consolas,monospace;font-size:.88em;}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:13px 15px;
+    overflow-x:auto;margin:12px 0;}
+  pre code{background:none;border:none;padding:0;font-size:.82rem;line-height:1.55;color:var(--code-fg);}
+  .badge{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:20px;vertical-align:middle;margin-left:8px;}
+  .b-biz{background:var(--biz-bg);color:var(--biz-fg);}
+  .b-dev{background:var(--dev-bg);color:var(--dev-fg);}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.86rem;display:block;overflow-x:auto;}
+  th,td{border:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top;}
+  th{background:var(--th);font-weight:600;white-space:nowrap;}
+  .result th{background:var(--biz-bg);color:var(--biz-fg);}
+  .keytag{display:inline-block;background:var(--key-bg);color:var(--key-fg);font-size:.68rem;font-weight:700;
+    padding:1px 6px;border-radius:4px;margin-right:5px;}
+  .fk{color:var(--accent);font-weight:600;}
+  .note{background:var(--card);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+  .note b{color:var(--accent);}
+  .warn{background:var(--bad-bg);border-left:4px solid var(--bad-fg);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+  .warn b{color:var(--bad-fg);}
+  .intent{background:var(--good-bg);border-left:4px solid var(--good-fg);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+  .intent b{color:var(--good-fg);}
+  .diagram{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin:14px 0;overflow-x:auto;}
+  .diagram pre{background:none;border:none;padding:0;margin:0;color:var(--fg);font-size:.82rem;}
+  .erd svg{width:100%;height:auto;min-width:680px;}
+  .erd .b-box{fill:var(--sat);stroke:var(--border);stroke-width:1.5;}
+  .erd .b-spine{fill:var(--spine);stroke:var(--accent);stroke-width:1.8;}
+  .erd .b-cust{fill:var(--biz-bg);stroke:var(--biz-fg);stroke-width:1.5;}
+  .erd .b-name{fill:var(--fg);font-weight:700;font-size:14px;font-family:monospace;}
+  .erd .b-key{fill:var(--muted);font-size:10px;font-family:monospace;}
+  .erd .rel{stroke:var(--line);stroke-width:1.5;fill:none;}
+  .erd .fklab{fill:var(--muted);font-size:10px;font-family:monospace;}
+  .erd .card{fill:var(--accent);font-size:11px;font-weight:700;}
+  ul.expl{margin:8px 0;padding-left:20px;} ul.expl li{margin:5px 0;}
+  .chain{list-style:none;padding:0;margin:14px 0;}
+  .chain li{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin:8px 0;background:var(--card);}
+  .chain .t{font-family:monospace;color:var(--accent);font-weight:700;}
+  .chain .arrow{color:var(--muted);font-size:.8rem;padding-left:14px;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0;}
+  @media(max-width:720px){.cols{grid-template-columns:1fr;}}
+  .bad,.good{border-radius:8px;padding:10px 12px;border:1px solid var(--border);}
+  .bad{background:var(--bad-bg);} .good{background:var(--good-bg);}
+  .bad h5,.good h5{margin:0 0 6px;font-size:.84rem;} .bad h5{color:var(--bad-fg);} .good h5{color:var(--good-fg);}
+  .bad pre,.good pre{margin:0;background:var(--bg);}
+  .blocknum{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;
+    background:var(--accent);color:#fff;font-weight:700;font-size:.85rem;margin-right:8px;}
+  a.back{color:var(--muted);text-decoration:none;font-size:.82rem;}
+  .themebtn{position:fixed;top:14px;right:14px;background:var(--card);color:var(--fg);border:1px solid var(--border);
+    border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem;z-index:10;}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem;}
+</style>
+</head>
+<body>
+<button class="themebtn" onclick="(function(){var r=document.documentElement;var d=(r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));r.setAttribute('data-theme',d==='dark'?'light':'dark');})()">◐ 테마</button>
+<header class="top">
+  <div class="wrap" style="padding:0;">
+    <h1>수불부 AMDP 해부 — YCL_CO_SL_AMDP</h1>
+    <p>재고수불장의 업무 목적부터 SQLScript 한줄 해부 · 원천 테이블 · ERD · 실데이터 추적까지</p>
+    <p>시리즈 6편(실전 케이스 스터디) · 선행: <a href="03_amdp_concept.html">03 AMDP 개념</a> · 모든 수치는 실습 시스템(client 100) 실측</p>
+    <p><span class="badge b-biz">업무</span> 컨설턴트 관점 &nbsp; <span class="badge b-dev">개발</span> 개발자 관점 — 배지로 절의 성격을 표시합니다</p>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#s1">1부. 수불부란 무엇인가</a></li>
+    <li><a href="#s2">2부. 원천 테이블 &amp; ERD</a></li>
+    <li><a href="#s3">3부. TF 인터페이스 사전 (파라미터·출력 필드)</a></li>
+    <li><a href="#s4">4부. SQLScript 한줄 해부 ★</a></li>
+    <li><a href="#s5">5부. 실데이터로 따라가기 (MZ-RM-R100-08)</a></li>
+    <li><a href="#s6">6부. YTCO_SLMAP 매핑 운영 가이드</a></li>
+    <li><a href="#s7">7부. 부록 — 용어집·검증 이력·품질 대조</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1부 ============ -->
+<h2 class="sec" id="s1">1부. 수불부란 무엇인가 <span class="badge b-biz">업무</span></h2>
+
+<h3>1.1 정의</h3>
+<p><b>수불부(재고수불장, Stock Ledger)</b>는 일정 기간 동안 자재별 재고가 "얼마에서 시작해서(기초), 무엇이 들어오고(입고), 무엇이 나가고(출고), 어떤 조정을 거쳐(조정), 얼마로 끝났는가(기말)"를 <b>수량과 금액 양쪽으로</b> 한 줄에 보여주는 장부입니다.</p>
+<div class="diagram"><pre>
+  기초(Opening)  +  입고(Inflow)  −  출고(Outflow)  ±  조정(Adjustment)  =  기말(Closing)
+
+  opn_qty/amt      in_*_qty/amt     out_*_qty/amt      adj_*_amt            cls_qty/amt
+                                                                              ↑
+                                            diff = 좌변 − 우변  (0이어야 정상) ┘
+</pre></div>
+
+<h3>1.2 왜 필요한가</h3>
+<ul class="expl">
+  <li><b>결산 검증</b> — 월말/기말 재고금액(재무제표의 재고자산)이 이동 내역과 수학적으로 맞는지 확인</li>
+  <li><b>감사 대응</b> — "이 자재 재고가 왜 이 금액인가?"에 대해 기초부터 기말까지의 흐름으로 답변</li>
+  <li><b>이상 감지</b> — <code>diff ≠ 0</code>이면 분류 누락·데이터 오류·기간 경계 문제 중 하나가 존재</li>
+</ul>
+<div class="note"><b>diff=0의 의미와 한계</b> — diff=0은 "질량 보존"(모든 이동이 어딘가로 분류됨)을 뜻할 뿐, <b>분류의 품질</b>(구매입고가 진짜 IN_PO로 갔는지)까지 보장하지는 않습니다. 분류 품질은 6부의 폴백(OTH) 모니터링과 샘플 추적(5부)으로 확인합니다.</div>
+
+<h3>1.3 이 구현의 아키텍처 <span class="badge b-dev">개발</span></h3>
+<div class="diagram"><pre>
+ ┌─────────────────────────────────────────────────────────────────┐
+ │ YCOS1000 (ALV 리포트)          ← 사용자가 실행하는 화면          │
+ │   SELECT ... FROM ytf_co_sl_stock( p_bwkey = ..., ... )          │
+ ├─────────────────────────────────────────────────────────────────┤
+ │ YTF_CO_SL_STOCK (CDS Table Function)  ← 시그니처(파라미터/필드) │
+ │   implemented by method ycl_co_sl_amdp=>get_stock_ledger         │
+ ├─────────────────────────────────────────────────────────────────┤
+ │ YCL_CO_SL_AMDP=>GET_STOCK_LEDGER (AMDP, SQLScript)  ← 로직 전부 │
+ │   10개 블록 체인: master → bal → doc → mat → move → ranked      │
+ │                    → pivot → keys → RETURN                       │
+ ├─────────────────────────────────────────────────────────────────┤
+ │ 원천: CKMLHD · MLDOC · FCML_REP_V · MATDOC · MARA/MAKT           │
+ │ 커스텀 매핑: YTCO_SLMAP                                          │
+ └─────────────────────────────────────────────────────────────────┘
+</pre></div>
+<p>계층별 책임이 명확합니다: 화면은 <b>표시만</b>, CDS TF는 <b>계약(인터페이스)만</b>, AMDP는 <b>계산 전부</b>, 매핑 테이블은 <b>업무 규칙</b>(어떤 이동이 어떤 칼럼인가)을 코드 수정 없이 바꿀 수 있게 분리합니다.</p>
+
+<!-- ============ 2부 ============ -->
+<h2 class="sec" id="s2">2부. 원천 테이블 &amp; ERD</h2>
+
+<h3>2.1 ERD — 조인 관계 한눈에 <span class="badge b-dev">개발</span></h3>
+<div class="diagram erd">
+<svg viewBox="0 0 900 470" role="img" aria-label="수불부 AMDP 원천 테이블 ERD">
+  <!-- lines under boxes -->
+  <line class="rel" x1="450" y1="86" x2="450" y2="196"/>
+  <text class="fklab" x="458" y="150">kalnr = kalnr_mat</text>
+  <text class="card" x="436" y="102">N</text><text class="card" x="436" y="190">1</text>
+
+  <line class="rel" x1="235" y1="225" x2="365" y2="225"/>
+  <text class="fklab" x="248" y="218">matnr</text>
+  <text class="card" x="240" y="242">1</text><text class="card" x="352" y="242">N</text>
+
+  <line class="rel" x1="535" y1="225" x2="665" y2="225"/>
+  <text class="fklab" x="560" y="218">kalnr = kalnr</text>
+  <text class="card" x="542" y="242">1</text><text class="card" x="652" y="242">N</text>
+
+  <line class="rel" x1="750" y1="253" x2="750" y2="363"/>
+  <text class="fklab" x="758" y="310">awref/aworg/awitem</text>
+  <text class="fklab" x="758" y="325">= mblnr/mjahr/zeile</text>
+  <text class="card" x="736" y="270">N</text><text class="card" x="736" y="357">1*</text>
+
+  <line class="rel" x1="450" y1="253" x2="450" y2="363"/>
+  <text class="fklab" x="458" y="300">categ/ptyp/glvor</text>
+  <text class="fklab" x="458" y="315">(+matdoc bwart/shkzg/sobkz)</text>
+  <text class="card" x="436" y="270">N</text><text class="card" x="436" y="357">rule</text>
+
+  <line class="rel" x1="150" y1="253" x2="150" y2="363"/>
+  <text class="fklab" x="158" y="312">matnr (+spras)</text>
+  <text class="card" x="136" y="270">1</text><text class="card" x="136" y="357">N</text>
+
+  <!-- top: balances -->
+  <rect class="b-box" x="345" y="30" width="210" height="56" rx="8"/>
+  <text class="b-name" x="450" y="54" text-anchor="middle">FCML_REP_V</text>
+  <text class="b-key" x="450" y="72" text-anchor="middle">잔액(AB/EB) · kalnr_mat·bdatj·poper</text>
+
+  <!-- middle spine -->
+  <rect class="b-box" x="45" y="197" width="190" height="56" rx="8"/>
+  <text class="b-name" x="140" y="221" text-anchor="middle">MARA</text>
+  <text class="b-key" x="140" y="239" text-anchor="middle">자재 마스터 · PK matnr</text>
+
+  <rect class="b-spine" x="365" y="197" width="170" height="56" rx="8"/>
+  <text class="b-name" x="450" y="221" text-anchor="middle">CKMLHD</text>
+  <text class="b-key" x="450" y="239" text-anchor="middle">PK kalnr ↔ matnr/bwkey/bwtar</text>
+
+  <rect class="b-spine" x="665" y="197" width="190" height="56" rx="8"/>
+  <text class="b-name" x="760" y="221" text-anchor="middle">MLDOC</text>
+  <text class="b-key" x="760" y="239" text-anchor="middle">ML 문서 라인 · categ ZU/VN/PC</text>
+
+  <!-- bottom -->
+  <rect class="b-box" x="55" y="363" width="190" height="56" rx="8"/>
+  <text class="b-name" x="150" y="387" text-anchor="middle">MAKT</text>
+  <text class="b-key" x="150" y="405" text-anchor="middle">자재 내역 · matnr+spras</text>
+
+  <rect class="b-cust" x="345" y="363" width="210" height="56" rx="8"/>
+  <text class="b-name" x="450" y="387" text-anchor="middle">YTCO_SLMAP</text>
+  <text class="b-key" x="450" y="405" text-anchor="middle">커스텀 분류 매핑 · seqnr 우선순위</text>
+
+  <rect class="b-box" x="655" y="363" width="210" height="56" rx="8"/>
+  <text class="b-name" x="760" y="387" text-anchor="middle">MATDOC</text>
+  <text class="b-key" x="760" y="405" text-anchor="middle">자재문서 · bwart/shkzg · GUID키!</text>
+</svg>
+</div>
+<p>중앙의 <b>CKMLHD</b>가 허브입니다 — 자재원장은 자재를 <code>matnr</code>이 아니라 <b>원가추정번호 <code>kalnr</code></b>로 식별하므로, 잔액(FCML_REP_V)과 이동(MLDOC)을 자재와 연결하려면 반드시 CKMLHD를 거칩니다. MLDOC은 원천 자재문서(MATDOC)를 <code>awref/aworg/awitem</code>으로 참조하고, 매핑 테이블(YTCO_SLMAP)은 조인이 아니라 <b>규칙 매칭</b>(=/와일드카드)으로 연결됩니다. <code>1*</code>: matdoc은 논리적으로 1건이지만 물리적으로 여러 행일 수 있습니다(아래 함정 참조).</p>
+
+<h3>2.2 테이블 카드</h3>
+
+<h4>CKMLHD — 자재원장 마스터 (kalnr ↔ 자재 다리) · 실측 1,753행 (1710: 420행)</h4>
+<table class="fields">
+<tr><th>필드</th><th>의미</th></tr>
+<tr><td><span class="keytag">KEY</span>KALNR</td><td>원가추정번호(Cost Estimate Number) — ML의 내부 자재 식별자</td></tr>
+<tr><td><span class="fk">MATNR</span> / <span class="fk">BWKEY</span> / <span class="fk">BWTAR</span></td><td>자재번호 / 평가영역(≈플랜트) / 평가유형</td></tr>
+<tr><td>VBELN / POSNR / PSPNR / SOBKZ</td><td>판매오더·프로젝트·특수재고 구분 — <b>세그먼트 분리의 원인</b></td></tr>
+</table>
+<div class="warn"><b>함정 ①</b> — 같은 (matnr, bwkey, bwtar)에 kalnr이 <b>여러 개</b>일 수 있습니다(판매오더 재고·프로젝트 재고 등 특수재고 세그먼트마다 kalnr 별도 발번). 실측: 1710의 TG14는 kalnr <b>10개</b>. 이를 모르고 자재 키로 조인하면 결과가 배수로 뻥튀기됩니다 — 4부 블록 2에서 실제 버그 사례로 다룹니다.</div>
+
+<h4>MLDOC — 자재원장 단일문서 라인 · 실측 126,693행</h4>
+<p>S/4HANA에서 자재원장의 모든 기간 데이터(이동·가격변경·정산)를 담는 단일 테이블입니다(구 MLIT/MLPP 등 통합).</p>
+<table class="fields">
+<tr><th>필드</th><th>의미</th></tr>
+<tr><td><span class="fk">KALNR</span></td><td>원가추정번호 → CKMLHD</td></tr>
+<tr><td>CATEG</td><td>범주: <b>ZU</b>(입고 Zugang) / <b>VN</b>(출고 Verbrauch) / <b>PC</b>(가격변경 Price Change) / AB·EB(기초·기말)</td></tr>
+<tr><td>PTYP / GLVOR</td><td>프로세스 유형 / G/L 업무(예: RMWE 입고, RMRU 생산투입, RMRP 송장)</td></tr>
+<tr><td>JAHRPER</td><td>연+기간 7자리(예: 2020005)</td></tr>
+<tr><td>CURTP / RLDNR</td><td>통화유형(10 법정/30 그룹/40 경화) / 원장(0L 선도원장)</td></tr>
+<tr><td>AWTYP / <span class="fk">AWREF/AWORG/AWITEM</span></td><td>원천문서 유형(MKPF=자재문서, RMRP=송장…) / 문서번호·연도·라인</td></tr>
+<tr><td>QUANT / STVAL</td><td>수량 / 재고금액(입고 +, 출고 −)</td></tr>
+<tr><td>PRD / KDM</td><td>가격차이 / 환율차이 (실제원가 평가 시 가산)</td></tr>
+<tr><td>RUNREF</td><td>ML 결산 런 참조 — 정산 라인 식별(≠'' 이면 costing run)</td></tr>
+</table>
+
+<h4>FCML_REP_V — 잔액 뷰 (기초/기말)</h4>
+<table class="fields">
+<tr><th>필드</th><th>의미</th></tr>
+<tr><td><span class="fk">KALNR_MAT</span></td><td>자재의 kalnr → CKMLHD</td></tr>
+<tr><td>CATEG</td><td><b>AB</b>(기초, Anfangsbestand) / <b>EB</b>(기말, Endbestand)</td></tr>
+<tr><td>BDATJ / POPER</td><td>회계연도 / 기간(001~016)</td></tr>
+<tr><td>LBKUM / SALK3</td><td>재고수량 / 재고금액(표준가 기준)</td></tr>
+<tr><td>ESTPRD/ESTKDM/MSTPRD/MSTKDM</td><td>단층/다층 가격·환율차이 — 실제원가('A') 평가 시 salk3에 가산</td></tr>
+</table>
+<div class="note"><b>왜 잔액과 이동을 다른 원천에서?</b> — 기초/기말은 ML이 이미 집계해 둔 잔액(FCML_REP_V)을 읽는 것이 정확·저렴하고, 기간 중 이동은 라인 단위 분류가 필요하므로 MLDOC을 읽습니다. 둘을 diff로 대사(對査)하는 것이 이 수불부의 핵심 설계입니다.</div>
+
+<h4>MATDOC — 자재문서 · 실측 43,711행</h4>
+<table class="fields">
+<tr><th>필드</th><th>의미</th></tr>
+<tr><td>MBLNR / MJAHR / ZEILE</td><td>자재문서 번호/연도/라인 — MLDOC의 awref/aworg/awitem이 가리키는 대상</td></tr>
+<tr><td>BWART</td><td><b>이동유형</b>(101 입고, 261 생산투입, 601 판매출고…) — 분류의 핵심 열쇠</td></tr>
+<tr><td>SHKZG</td><td>차대변(S 차변=증가 / H 대변=감소) — 취소·반품 대칭 판정</td></tr>
+<tr><td>SOBKZ</td><td>특수재고(O 사급, E 판매오더, Q 프로젝트…)</td></tr>
+</table>
+<div class="warn"><b>함정 ②</b> — S/4의 MATDOC은 물리 키가 <b>GUID</b>라서 (mblnr, mjahr, zeile)가 유일하지 않습니다(한 라인이 재고유형 분할 등으로 여러 물리 행). 그대로 조인하면 이동이 <b>이중 집계</b>됩니다 — 4부 블록 5에서 dedup으로 해결.</div>
+
+<h4>MARA / MAKT — 자재 마스터/내역 · 실측 MAKT 24,122행</h4>
+<p>MARA에서 자재유형(mtart)·기본단위(meins), MAKT에서 로그인 언어의 자재내역(maktx)을 가져옵니다.</p>
+
+<h4>YTCO_SLMAP — 커스텀 분류 매핑 · 실측 31행</h4>
+<p>"어떤 이동이 수불부의 어느 칼럼인가"라는 <b>업무 규칙</b>을 담는 커스텀 테이블. 6부에서 상세히 다룹니다.</p>
+
+<!-- ============ 3부 ============ -->
+<h2 class="sec" id="s3">3부. TF 인터페이스 사전</h2>
+
+<h3>3.1 파라미터 7종 <span class="badge b-biz">업무</span></h3>
+<table>
+<tr><th>파라미터</th><th>타입</th><th>의미</th><th>예시</th></tr>
+<tr><td><code>p_bwkey</code></td><td>bwkey</td><td>평가영역(≈플랜트)</td><td>1710</td></tr>
+<tr><td><code>p_gjahr</code></td><td>gjahr</td><td>회계연도</td><td>2020</td></tr>
+<tr><td><code>p_poper_from/_to</code></td><td>poper</td><td>기간 범위(001~016). 기초는 from 기간의 AB, 기말은 to 기간의 EB</td><td>001 / 005</td></tr>
+<tr><td><code>p_curtp</code></td><td>curtp</td><td>통화유형: <b>10</b> 회사코드(법정) / 30 그룹 / 40 경화</td><td>10</td></tr>
+<tr><td><code>p_val_type</code></td><td>char1</td><td><b>'A'</b> 실제원가 = salk3+estprd+estkdm+mstprd+mstkdm(ML 차이 포함) / 그 외 = salk3(표준가)</td><td>S</td></tr>
+<tr><td><code>p_rldnr</code></td><td>fins_ledger</td><td>원장. <b>0L</b>(선도원장)로 고정 조회 — 병렬원장 이중집계 방지</td><td>0L</td></tr>
+</table>
+
+<h3>3.2 출력 필드 사전 <span class="badge b-biz">업무</span></h3>
+<p>키·마스터: client, gjahr, poper_from/to, bwkey, matnr, bwtar, maktx(내역), mtart(자재유형), meins(단위), waers(통화). 이후 모든 칼럼은 <b>수량(qty)+금액(amt) 쌍</b>입니다.</p>
+<table>
+<tr><th>구분</th><th>필드</th><th>카테고리 코드</th><th>업무 의미</th></tr>
+<tr><td>잔액</td><td>opn_qty/amt</td><td>—</td><td>기초재고 (from 기간의 AB)</td></tr>
+<tr><td rowspan="8">입고<br>(원부호)</td><td>in_po_*</td><td>IN_PO</td><td>구매입고 (101/102 등)</td></tr>
+<tr><td>in_sub_*</td><td>IN_SUB</td><td>사급(외주) 입고 (101+SOBKZ O)</td></tr>
+<tr><td>in_prd_*</td><td>IN_PRD</td><td>생산입고 (101 RMWF, 131)</td></tr>
+<tr><td>in_trf_*</td><td>IN_TRF</td><td>이송 입고 (301/305 S)</td></tr>
+<tr><td>in_ret_*</td><td>IN_RET</td><td>고객 반품입고 (651/653)</td></tr>
+<tr><td>in_mtm_*</td><td>IN_MTM</td><td>자재간 전환 입고 (309 S)</td></tr>
+<tr><td>in_adj_*</td><td>IN_ADJ</td><td>실사 조정입고 (701/711)</td></tr>
+<tr><td>in_oth_*</td><td>IN_OTH</td><td><b>미분류 입고(폴백)</b> — 0이어야 이상적</td></tr>
+<tr><td rowspan="10">출고<br>(×−1 양수화)</td><td>out_sls_*</td><td>OUT_SLS</td><td>판매출고 (601/602)</td></tr>
+<tr><td>out_prd_*</td><td>OUT_PRD</td><td>생산투입 (261/262)</td></tr>
+<tr><td>out_sub_*</td><td>OUT_SUB</td><td>사급 출고 (541)</td></tr>
+<tr><td>out_trf_*</td><td>OUT_TRF</td><td>이송 출고 (301/305 H)</td></tr>
+<tr><td>out_rtv_*</td><td>OUT_RTV</td><td>구매처 반품 (122/161)</td></tr>
+<tr><td>out_cc_*</td><td>OUT_CC</td><td>코스트센터 불출 (201/202)</td></tr>
+<tr><td>out_exp_*</td><td>OUT_EXP</td><td>비용화/샘플 등 (331/333)</td></tr>
+<tr><td>out_mtm_*</td><td>OUT_MTM</td><td>자재간 전환 출고 (309 H)</td></tr>
+<tr><td>out_adj_*</td><td>OUT_ADJ</td><td>실사 조정출고/폐기 (702/712/551)</td></tr>
+<tr><td>out_oth_*</td><td>OUT_OTH</td><td><b>미분류 출고(폴백)</b></td></tr>
+<tr><td rowspan="3">조정<br>(금액만)</td><td>adj_ppv_amt</td><td>ADJ_PPV</td><td>구매가격차이 — 송장(GLVOR RMRP) 기인</td></tr>
+<tr><td>adj_rev_amt</td><td>ADJ_REV</td><td>가격변경/재평가 (categ PC, 수동)</td></tr>
+<tr><td>adj_ml_amt</td><td>ADJ_ML</td><td>ML 결산 정산 (categ PC + runref≠'')</td></tr>
+<tr><td>잔액</td><td>cls_qty/amt</td><td>—</td><td>기말재고 (to 기간의 EB)</td></tr>
+<tr><td>검증</td><td>diff_qty/amt</td><td>—</td><td>기초+입고−출고(+조정)−기말. <b>0이어야 정상</b></td></tr>
+</table>
+<div class="note"><b>부호 규약</b> — MLDOC의 quant/stval은 입고 +, 출고 −입니다. 수불부에서는 읽기 쉽도록 <b>입고는 원부호 그대로, 출고는 ×(−1)로 양수화</b>해 표시하고, diff 계산 시 출고를 다시 빼줍니다. 조정 3종은 수량 개념이 없어(가격만 변함) 금액만 있으며 qty 칼럼은 0 고정입니다. 취소 문서(102 등)는 같은 칼럼에 음수로 들어가 자동 상계됩니다.</div>
+
+<!-- ============ 4부 ============ -->
+<h2 class="sec" id="s4">4부. SQLScript 한줄 해부 ★ <span class="badge b-dev">개발</span></h2>
+<p>메서드 선언부터 봅니다. 이후 10개 블록을 실행 순서대로 해부합니다. (소스는 2026-07-13 수정 반영 현행본)</p>
+<pre><code>METHOD get_stock_ledger BY DATABASE FUNCTION
+                        FOR HDB LANGUAGE SQLSCRIPT
+                        OPTIONS READ-ONLY
+                        USING fcml_rep_v ckmlhd mara makt mldoc matdoc ytco_slmap.</code></pre>
+<ul class="expl">
+  <li><code>BY DATABASE FUNCTION</code> + CDS 쪽 <code>FOR TABLE FUNCTION</code> — 프로시저가 아닌 <b>함수형 AMDP</b>. 결과를 <code>RETURN SELECT</code>로 돌려줍니다 (<a href="03_amdp_concept.html#p2">03 문서 2.5</a>).</li>
+  <li><code>OPTIONS READ-ONLY</code> — 조회 전용 보장(품질 체크리스트 ④).</li>
+  <li><code>USING</code> — 참조하는 7개 오브젝트만 정확히 나열(체크리스트 ⑤).</li>
+</ul>
+
+<h3><span class="blocknum">1</span>lt_master — kalnr ↔ 자재 다리</h3>
+<pre><code>lt_master =
+  SELECT hd.mandt, hd.kalnr, hd.matnr, hd.bwkey, hd.bwtar,
+         makt.maktx, mara.mtart, mara.meins
+    FROM ckmlhd AS hd
+    INNER JOIN mara ON mara.mandt = hd.mandt AND mara.matnr = hd.matnr
+    LEFT OUTER JOIN makt ON makt.mandt = hd.mandt AND makt.matnr = hd.matnr
+         AND makt.spras = session_context('LOCALE_SAP')
+   WHERE hd.mandt = session_context('CLIENT')
+     AND hd.bwkey = :p_bwkey;</code></pre>
+<ul class="expl">
+  <li><b>1~2행</b> — kalnr(ML 식별자)과 자재 키(matnr/bwkey/bwtar), 그리고 최종 출력에 쓸 마스터 속성(내역·유형·단위)을 한 번에 수집.</li>
+  <li><b>INNER JOIN mara</b> — 자재 마스터 없는 kalnr은 의미 없으므로 inner. 조인에 <code>mandt</code> 포함(클라이언트 정합).</li>
+  <li><b>LEFT OUTER JOIN makt</b> — 내역은 없을 수도 있으니 left. <code>session_context('LOCALE_SAP')</code>로 <b>로그인 언어</b>의 내역만.</li>
+  <li><b>WHERE</b> — 클라이언트 필터(AMDP는 자동 필터 없음! 체크리스트 ⑥) + 파라미터 <code>:p_bwkey</code>를 <b>가장 먼저</b> 적용(필터 조기, 체크리스트 ③). 이후 모든 블록이 이 결과와 조인하므로 전체 데이터량이 여기서 결정됩니다.</li>
+</ul>
+
+<h3><span class="blocknum">2</span>lt_mast1 — 최종 조인용 자재수준 집약 (2026-07-13 수정 ①)</h3>
+<pre><code>lt_mast1 =
+  SELECT mandt, matnr, bwkey, bwtar,
+         MAX(maktx) AS maktx, MAX(mtart) AS mtart, MAX(meins) AS meins
+    FROM :lt_master
+   GROUP BY mandt, matnr, bwkey, bwtar;</code></pre>
+<div class="cols">
+  <div class="bad"><h5>✗ 수정 전 — 팬아웃 버그</h5>
+  <p style="font-size:.85rem;margin:4px 0;">최종 RETURN이 <code>:lt_master</code>(kalnr 수준)와 직접 조인 → TG14처럼 kalnr 10개인 자재는 <b>동일 값 10행</b> 출력(실측: 215행, TG14 ×10 — 합계 시 10배 과대).</p></div>
+  <div class="good"><h5>✓ 수정 후</h5>
+  <p style="font-size:.85rem;margin:4px 0;">자재 수준으로 GROUP BY한 <code>lt_mast1</code>을 최종 조인에 사용 → 197행, 중복 0, 값 보존(TG14 opn 16 / cls 16 / 203.90).</p></div>
+</div>
+<ul class="expl">
+  <li><b>왜 MAX인가</b> — 같은 자재의 세그먼트들은 maktx/mtart/meins가 동일하므로 MAX는 사실상 "아무거나 하나"의 결정적 표현.</li>
+  <li><b>왜 lt_master를 없애지 않나</b> — 잔액·이동 집계(블록 3·4)는 <b>kalnr 수준</b> 조인이 맞습니다(세그먼트 전부 합산해야 자재 총량). 문제는 오직 "이미 자재 수준으로 집계된 결과"에 kalnr 수준 마스터를 또 조인한 마지막 단계였습니다. 집계 수준과 조인 수준을 맞추는 것 — 이것이 이 버그의 교훈입니다.</li>
+</ul>
+
+<h3><span class="blocknum">3</span>lt_bal — 기초(AB)/기말(EB) 잔액</h3>
+<pre><code>lt_bal =
+  SELECT ml.mandt, mas.matnr, mas.bwkey, mas.bwtar, ml.waers,
+    SUM( CASE WHEN ml.categ = 'AB' AND ml.poper = :p_poper_from
+              THEN ml.lbkum ELSE 0 END ) AS opn_qty,
+    SUM( CASE WHEN ml.categ = 'AB' AND ml.poper = :p_poper_from THEN
+           CASE WHEN :p_val_type = 'A'
+                THEN ml.salk3 + ml.estprd + ml.estkdm + ml.mstprd + ml.mstkdm
+                ELSE ml.salk3 END
+         ELSE 0 END ) AS opn_amt,
+    SUM( CASE WHEN ml.categ = 'EB' AND ml.poper = :p_poper_to
+              THEN ml.lbkum ELSE 0 END ) AS cls_qty,
+    SUM( CASE WHEN ml.categ = 'EB' AND ml.poper = :p_poper_to THEN
+           CASE ... END ELSE 0 END ) AS cls_amt          -- (opn_amt와 동일 공식)
+  FROM fcml_rep_v AS ml
+  INNER JOIN :lt_master AS mas
+    ON mas.mandt = ml.mandt AND mas.kalnr = ml.kalnr_mat
+  WHERE ml.mandt = session_context('CLIENT')
+    AND ml.bdatj = :p_gjahr  AND ml.curtp = :p_curtp
+    AND ml.rldnr = :p_rldnr  AND ml.categ IN ('AB','EB')
+    AND ml.poper IN (:p_poper_from, :p_poper_to)
+  GROUP BY ml.mandt, mas.matnr, mas.bwkey, mas.bwtar, ml.waers;</code></pre>
+<ul class="expl">
+  <li><b>한 번의 스캔으로 4칼럼</b> — AB(from)와 EB(to)를 각각 SELECT하지 않고, 조건부 SUM(CASE) 4개로 한 번에 뽑습니다(조건부 집계 패턴).</li>
+  <li><b>중첩 CASE = 평가 방식</b> — <code>:p_val_type='A'</code>면 표준가(salk3)에 ML 차이 4종(단층/다층 × 가격/환율)을 가산한 <b>실제원가</b>, 아니면 salk3만.</li>
+  <li><b>rldnr 필터</b> — 병렬 원장(0L 외)이 있으면 같은 이동이 원장 수만큼 중복 존재. 단일 원장 고정으로 이중집계 차단.</li>
+  <li><b>GROUP BY로 세그먼트 합산</b> — kalnr 수준으로 조인한 뒤 자재 수준으로 접습니다(블록 2 해설 참조).</li>
+</ul>
+
+<h3><span class="blocknum">4</span>lt_doc — 기간 내 이동 라인 (2026-07-13 수정 ② 1/2)</h3>
+<pre><code>lt_doc =
+  SELECT doc.mandt, mas.matnr, mas.bwtar, mas.bwkey, doc.waers,
+         doc.categ, doc.ptyp, ifnull(doc.glvor,'') AS glvor,
+         ifnull(doc.runref,'') AS runref,
+         doc.awtyp, doc.awref, doc.aworg, doc.awitem,
+         doc.quant AS move_qty,
+         CASE WHEN :p_val_type = 'A'
+              THEN doc.stval + doc.prd + doc.kdm
+              ELSE doc.stval END AS move_amt
+  FROM mldoc AS doc
+  INNER JOIN :lt_master AS mas
+    ON mas.mandt = doc.mandt AND mas.kalnr = doc.kalnr
+  WHERE doc.mandt = session_context('CLIENT')
+    AND doc.curtp = :p_curtp  AND doc.rldnr = :p_rldnr
+    AND doc.jahrper BETWEEN :p_gjahr || :p_poper_from
+                        AND :p_gjahr || :p_poper_to
+    AND doc.categ IN ('ZU','VN','PC');</code></pre>
+<ul class="expl">
+  <li><b>ifnull</b> — glvor/runref는 NULL 가능. 매핑 비교('=' 또는 '*')가 NULL에 빠지지 않도록 ''로 정규화.</li>
+  <li><b>awtyp/awref/aworg/awitem을 실어 나름</b> — 다음 블록(matdoc 제한 조인)의 열쇠. 이 블록을 분리한 것이 수정 ②의 핵심: <b>필터된 이동 라인을 먼저 확정</b>해야 matdoc을 그 참조분만 읽을 수 있습니다.</li>
+  <li><b>jahrper 범위</b> — <code>:p_gjahr || :p_poper_from</code> 문자열 연결로 '2020'+'001'='2020001'. NUMC 7자리끼리의 BETWEEN이라 안전.</li>
+  <li><b>categ IN (ZU,VN,PC)</b> — 입고/출고/가격변경만. AB/EB(잔액)는 블록 3의 몫.</li>
+  <li><b>move_amt 공식</b> — 잔액과 동일 사상: 'A'면 stval+prd+kdm(가격·환율차 포함), 아니면 stval. <b>잔액과 이동의 평가 기준이 같아야 diff=0이 성립</b>합니다.</li>
+</ul>
+
+<h3><span class="blocknum">5</span>lt_mat — MATDOC 중복 제거 + 참조분 제한 (수정 ② 2/2)</h3>
+<pre><code>lt_mat =
+  SELECT mat.mandt, mat.mblnr, mat.mjahr, mat.zeile,
+         MAX(mat.bwart) AS bwart, MAX(mat.shkzg) AS shkzg, MAX(mat.sobkz) AS sobkz
+    FROM matdoc AS mat
+    INNER JOIN ( SELECT DISTINCT mandt, awref, aworg, awitem
+                   FROM :lt_doc
+                  WHERE awtyp = 'MKPF' ) AS d
+      ON  d.mandt = mat.mandt
+      AND d.awref = mat.mblnr
+      AND CAST( mat.mjahr AS INTEGER ) = CAST( d.aworg  AS INTEGER )
+      AND CAST( mat.zeile AS INTEGER ) = CAST( d.awitem AS INTEGER )
+   GROUP BY mat.mandt, mat.mblnr, mat.mjahr, mat.zeile;</code></pre>
+<ul class="expl">
+  <li><b>왜 dedup?</b> — 함정 ②(2부): MATDOC 물리 키는 GUID라 (mblnr,mjahr,zeile)가 유일하지 않음. GROUP BY로 라인당 1행 보장. 같은 라인의 분할 행들은 bwart/shkzg가 동일하므로 <b>MAX()가 결정적</b>(아무거나 하나 = 그 값).</li>
+  <li><b>왜 INNER JOIN 서브쿼리?</b> — 수정 전에는 클라이언트 전체 matdoc(43,711행, 운영이면 수천만)을 dedup했습니다. 지금은 lt_doc이 실제 참조하는 문서 키(DISTINCT awref/aworg/awitem)로 제한 — 체크리스트 ③(필터 조기)의 전형적 적용.</li>
+  <li><b>CAST 양쪽 통일</b> — aworg(CHAR)와 mjahr(NUMC), awitem과 zeile은 타입이 달라 INTEGER로 맞춰 비교(체크리스트 ⑧ 암묵 형변환 방지). 서브쿼리가 awtyp='MKPF'만 남기므로 aworg는 항상 연도 숫자 — CAST 안전.</li>
+</ul>
+
+<h3><span class="blocknum">6</span>lt_move — 이동 라인 + 자재문서 속성 결합</h3>
+<pre><code>lt_move =
+  SELECT
+    ROW_NUMBER() OVER () AS rid,
+    src.mandt, src.matnr, src.bwtar, src.bwkey, src.waers,
+    src.categ, src.ptyp, src.glvor, src.runref,
+    ifnull(mat.bwart,'') AS bwart,
+    ifnull(mat.shkzg,'') AS shkzg,
+    ifnull(mat.sobkz,'') AS sobkz,
+    src.move_qty, src.move_amt
+  FROM :lt_doc AS src
+  LEFT OUTER JOIN :lt_mat AS mat
+    ON  src.awtyp = 'MKPF'
+    AND mat.mandt = src.mandt
+    AND mat.mblnr = src.awref
+    AND CAST( mat.mjahr AS INTEGER ) =
+        CASE WHEN src.awtyp = 'MKPF' THEN CAST( src.aworg AS INTEGER ) ELSE -1 END
+    AND CAST( mat.zeile AS INTEGER ) =
+        CASE WHEN src.awtyp = 'MKPF' THEN CAST( src.awitem AS INTEGER ) ELSE -1 END;</code></pre>
+<ul class="expl">
+  <li><b>ROW_NUMBER() OVER () AS rid</b> — 라인마다 고유 번호. ORDER 없는 ROW_NUMBER는 순서 비결정이지만 여기선 <b>식별자로만</b> 쓰므로 무해(블록 7의 PARTITION BY 기준).</li>
+  <li><b>LEFT OUTER JOIN</b> — 자재문서가 없는 라인(송장 RMRP, 가격변경 PC 등)도 살려야 하므로 left. 그 경우 bwart/shkzg/sobkz는 ifnull로 ''.</li>
+  <li><b>CASE 가드</b> — <code>src.awtyp='MKPF'</code>가 이미 조인 조건에 있지만, HANA가 조건 평가 순서를 보장하지 않으므로 <b>CAST(src.aworg)가 비MKPF 행(비숫자 aworg)에서 터지지 않도록</b> CASE로 감쌉니다. 방어적 형변환의 교과서 사례.</li>
+</ul>
+
+<h3><span class="blocknum">7</span>lt_ranked — 매핑 규칙 적용 (분류의 심장)</h3>
+<pre><code>lt_ranked =
+  SELECT rid, mandt, matnr, bwtar, bwkey, waers, move_qty, move_amt, cat_code
+  FROM (
+    SELECT src.rid, ..., src.move_qty, src.move_amt,
+           ifnull( map.cat_code,
+                   CASE WHEN src.categ = 'ZU' THEN 'IN_OTH'
+                        WHEN src.categ = 'VN' THEN 'OUT_OTH'
+                        WHEN src.categ = 'PC' AND src.runref &lt;&gt; '' THEN 'ADJ_ML'
+                        WHEN src.categ = 'PC' THEN 'ADJ_REV'
+                        ELSE 'ADJ_REV' END ) AS cat_code,
+           ROW_NUMBER() OVER ( PARTITION BY src.rid ORDER BY map.seqnr ASC ) AS rk
+    FROM :lt_move AS src
+    LEFT OUTER JOIN ytco_slmap AS map
+      ON  map.mandt = src.mandt
+      AND ( map.categ = src.categ OR map.categ = '*' )
+      AND ( map.ptyp  = src.ptyp  OR map.ptyp  = '*' )
+      AND ( map.glvor = src.glvor OR map.glvor = '*' )
+      AND ( map.bwart = src.bwart OR map.bwart = '*' )
+      AND ( map.shkzg = src.shkzg OR map.shkzg = '*' )
+      AND ( map.sobkz = src.sobkz OR map.sobkz = '*' )
+  )
+  WHERE rk = 1;</code></pre>
+<ul class="expl">
+  <li><b>와일드카드 조인</b> — 6개 차원 각각 "정확히 일치 <b>또는</b> 매핑값이 '*'". 한 라인이 여러 매핑 행에 동시 매칭될 수 있습니다(예: 101/S 라인은 1000·1001·1010 모두 후보).</li>
+  <li><b>seqnr 최소 우선</b> — <code>ROW_NUMBER() OVER (PARTITION BY rid ORDER BY seqnr)</code>로 라인(rid)마다 매칭 행들에 순위를 매기고 <code>rk=1</code>만 남김 → <b>"구체적 규칙을 작은 seqnr에 두면 이긴다"</b>는 운영 규칙이 성립(6부).</li>
+  <li><b>폴백 CASE</b> — 어떤 매핑에도 안 걸리면(map.cat_code IS NULL) categ 기준 안전망: ZU→IN_OTH, VN→OUT_OTH, PC는 runref 유무로 ADJ_ML(결산 정산)/ADJ_REV(수동 가격변경) 분기. <b>어떤 라인도 버려지지 않으므로 diff=0(질량 보존)이 구조적으로 보장</b>됩니다.</li>
+  <li><b>rid가 필요한 진짜 이유</b> — PARTITION 기준이 문서 키가 아니라 rid인 것은, 같은 문서라도 <b>라인별로 독립 분류</b>되어야 하기 때문입니다.</li>
+</ul>
+
+<h3><span class="blocknum">8</span>lt_pivot — 카테고리 → 칼럼 피벗</h3>
+<pre><code>lt_pivot =
+  SELECT mandt, matnr, bwtar, bwkey, MAX(waers) AS waers,
+    SUM( CASE WHEN cat_code='IN_PO'  THEN move_qty ELSE 0 END ) AS in_po_qty,
+    SUM( CASE WHEN cat_code='IN_PO'  THEN move_amt ELSE 0 END ) AS in_po_amt,
+    ... (in_* 8쌍) ...
+    SUM( CASE WHEN cat_code='OUT_SLS' THEN -move_qty ELSE 0 END ) AS out_sls_qty,
+    ... (out_* 10쌍, 전부 -move_*) ...
+    SUM( CASE WHEN cat_code='ADJ_PPV' THEN move_amt ELSE 0 END ) AS adj_ppv_amt,
+    SUM( CASE WHEN cat_code='ADJ_REV' THEN move_amt ELSE 0 END ) AS adj_rev_amt,
+    SUM( CASE WHEN cat_code='ADJ_ML'  THEN move_amt ELSE 0 END ) AS adj_ml_amt
+  FROM :lt_ranked
+  GROUP BY mandt, matnr, bwtar, bwkey;</code></pre>
+<ul class="expl">
+  <li><b>조건부 SUM 피벗</b> — cat_code(세로)를 40여 개 칼럼(가로)으로. 표준 SQL만으로 피벗하는 정석 패턴.</li>
+  <li><b>부호 규약 구현 지점</b> — out_*만 <code>-move_qty/-move_amt</code>: VN 라인은 원래 음수이므로 −를 곱해 양수 표기. 취소로 생긴 반대 부호도 같은 칼럼에서 자동 상계.</li>
+  <li><b>adj_*는 금액만</b> — 가격변경(PC)은 수량 이동이 없으므로 qty 칼럼 자체가 없고, 최종 출력에서 0으로 캐스트(블록 10).</li>
+</ul>
+
+<h3><span class="blocknum">9</span>lt_keys — 결과 드라이버</h3>
+<pre><code>lt_keys =
+  SELECT mandt, matnr, bwtar, bwkey FROM :lt_bal
+  UNION
+  SELECT mandt, matnr, bwtar, bwkey FROM :lt_pivot;</code></pre>
+<ul class="expl">
+  <li><b>왜 UNION(중복 제거)?</b> — "잔액만 있는 자재"(이동 없음)도 "이동만 있는 자재"(기중 입·출고 후 잔액 0)도 <b>한 행씩</b> 나와야 합니다. 어느 한쪽만 드라이버로 삼으면 반대 케이스가 누락됩니다.</li>
+  <li>여기서는 중복 제거가 목적이므로 UNION ALL이 아닌 UNION이 맞습니다(체크리스트 ⑪의 예외 케이스).</li>
+</ul>
+
+<h3><span class="blocknum">10</span>RETURN — 최종 조립</h3>
+<pre><code>RETURN
+  SELECT
+    k.mandt AS client, :p_gjahr AS gjahr, :p_poper_from AS poper_from, ...,
+    mas.maktx, mas.mtart, mas.meins,
+    coalesce(bal.waers, pv.waers) AS waers,
+    ifnull(bal.opn_qty,0) AS opn_qty, ...
+    CAST(0 AS "$ABAP.type( ml4h_lbkum )") AS adj_ppv_qty, ...
+    ( ifnull(bal.opn_qty,0)
+      + ifnull(pv.in_po_qty,0) + ... (in 8종)
+      - ifnull(pv.out_sls_qty,0) - ... (out 10종)
+      - ifnull(bal.cls_qty,0) ) AS diff_qty,
+    ( ... 금액은 + adj 3종까지 가산 ... ) AS diff_amt
+  FROM :lt_keys AS k
+  INNER JOIN :lt_mast1 AS mas
+    ON mas.mandt = k.mandt AND mas.matnr = k.matnr AND mas.bwtar = k.bwtar AND mas.bwkey = k.bwkey
+  LEFT OUTER JOIN :lt_bal  AS bal ON (4키 동일)
+  LEFT OUTER JOIN :lt_pivot AS pv ON (4키 동일);</code></pre>
+<ul class="expl">
+  <li><b>INNER JOIN :lt_mast1</b> — 수정 ①의 결과. 자재 수준 드라이버(lt_keys)에 자재 수준 마스터를 조인 — 수준이 일치하므로 팬아웃 없음.</li>
+  <li><b>LEFT JOIN bal/pv + ifnull(…,0)</b> — 잔액만/이동만 있는 자재의 반대편 값을 0으로. NULL이 산식에 들어가면 결과 전체가 NULL이 되므로 필수.</li>
+  <li><b>coalesce(bal.waers, pv.waers)</b> — 통화는 잔액 우선, 없으면 이동에서.</li>
+  <li><b><code>CAST(0 AS "$ABAP.type( ml4h_lbkum )")</code></b> — adj_*_qty는 개념상 0인데, TF 반환 구조와 타입을 정확히 맞추기 위해 <b>ABAP 사전 타입을 SQLScript에서 참조</b>하는 특수 문법을 사용.</li>
+  <li><b>diff 산식</b> — 3부 부호 규약 그대로: 기초 + Σ입고 − Σ출고(양수 표기이므로 빼기) − 기말. 금액은 조정 3종을 더한 뒤 기말을 뺍니다. <b>이 식이 0이 되는 것</b>이 수불부의 자기 검증입니다.</li>
+</ul>
+
+<!-- ============ 5부 ============ -->
+<h2 class="sec" id="s5">5부. 실데이터로 따라가기 <span class="badge b-biz">업무</span> <span class="badge b-dev">개발</span></h2>
+<p>플랜트 1710, 2020년 001~005기간, 자재 <b>MZ-RM-R100-08</b>('BKR-100 Derailleur Gears', 단위 ST, 통화 USD)의 여정을 서버 실측값으로 추적합니다.</p>
+<ul class="chain">
+  <li><span class="t">① CKMLHD</span> — MZ-RM-R100-08 / 1710 → <b>kalnr = 000100000414</b> (세그먼트 1개, bwtar '')
+    <div class="arrow">↓ 이 kalnr로 잔액·이동을 찾는다</div></li>
+  <li><span class="t">② MLDOC</span> (kalnr 414, 2020001~2020005, curtp 10, 0L)
+    <table class="result"><tr><th>categ/awtyp</th><th>건수</th><th>수량</th><th>금액(stval)</th><th>해석</th></tr>
+    <tr><td>ZU / MKPF</td><td>136</td><td>+15,647</td><td>+492,254.62</td><td>자재문서 입고</td></tr>
+    <tr><td>VN / MKPF</td><td>3</td><td>−457</td><td>−14,377.22</td><td>자재문서 출고</td></tr>
+    <tr><td>ZU / RMRP</td><td>135</td><td>0</td><td>0.00</td><td>송장수령(가격차 없음 → 금액 0)</td></tr></table>
+    <div class="arrow">↓ MKPF 라인은 awref로 자재문서를 찾아 bwart를 붙인다</div></li>
+  <li><span class="t">③ MATDOC</span> — 대표 라인 2건
+    <table class="result"><tr><th>mldoc 라인</th><th>awref(→mblnr)/zeile</th><th>bwart</th><th>shkzg</th><th>수량/금액</th></tr>
+    <tr><td>ZU</td><td>5000002411 / 0007</td><td><b>101</b></td><td>S</td><td>+47 / +1,478.62</td></tr>
+    <tr><td>VN</td><td>4900006386 / 0007</td><td><b>261</b></td><td>H</td><td>−47 / −1,478.62</td></tr></table>
+    <div class="arrow">↓ 이제 categ+glvor+bwart+shkzg 조합으로 매핑 규칙을 태운다</div></li>
+  <li><span class="t">④ YTCO_SLMAP 매칭</span>
+    <table class="result"><tr><th>라인</th><th>속성</th><th>매칭 경과(seqnr 오름차순)</th><th>결과</th></tr>
+    <tr><td>ZU (101/S)</td><td>glvor=RMWE, sobkz=''</td><td>1000(101/S/sobkz O) ✗ sobkz 불일치 → 1001(101/S/glvor RMWF) ✗ glvor 불일치 → <b>1010(101/S/*/*) ✓</b></td><td><b>IN_PO</b> 구매입고</td></tr>
+    <tr><td>VN (261/H)</td><td>glvor=RMRU</td><td><b>1110(261/H) ✓</b></td><td><b>OUT_PRD</b> 생산투입</td></tr></table>
+    <div class="arrow">↓ 카테고리별로 피벗·합산하면</div></li>
+  <li><span class="t">⑤ TF 최종 행</span> (실측)
+    <table class="result"><tr><th>opn</th><th>in_po</th><th>out_prd</th><th>cls</th><th>diff</th></tr>
+    <tr><td>799 / 25,136.54</td><td>15,647 / 492,254.62</td><td>457 / 14,377.22</td><td>15,989 / 503,013.94</td><td><b>0 / 0.00</b></td></tr></table>
+    <div class="arrow">검산 — 수량: 799 + 15,647 − 457 = 15,989 ✓ &nbsp;·&nbsp; 금액: 25,136.54 + 492,254.62 − 14,377.22 = 503,013.94 ✓</div></li>
+</ul>
+<div class="note"><b>읽는 법</b> — 이 다섯 단계가 곧 4부의 블록 체인입니다: ①=lt_master, ②=lt_doc, ③=lt_mat+lt_move, ④=lt_ranked, ⑤=lt_pivot+RETURN. 코드가 낯설면 이 표의 숫자를 코드 블록 옆에 놓고 대조해 보세요.</div>
+
+<!-- ============ 6부 ============ -->
+<h2 class="sec" id="s6">6부. YTCO_SLMAP 매핑 운영 가이드 <span class="badge b-biz">업무</span></h2>
+
+<h3>6.1 테이블 구조</h3>
+<table>
+<tr><th>컬럼</th><th>의미</th></tr>
+<tr><td><span class="keytag">KEY</span>SEQNR</td><td>우선순위(작을수록 먼저 승리). 구체적 규칙 = 작은 번호</td></tr>
+<tr><td>CATEG / PTYP / GLVOR / BWART / SHKZG / SOBKZ</td><td>매칭 6차원. 각각 정확값 또는 <b>'*'</b>(모두 허용)</td></tr>
+<tr><td>CAT_CODE</td><td>결과 카테고리(IN_PO, OUT_SLS, … — 3부 사전 참조)</td></tr>
+<tr><td>TEXT / ERDAT / ERNAM / AEDAT / AENAM</td><td>설명·생성/변경 이력</td></tr>
+</table>
+
+<h3>6.2 현재 등록 규칙 (실측 31행 요약)</h3>
+<table>
+<tr><th>seqnr</th><th>조건(categ/ptyp/glvor/bwart/shkzg/sobkz)</th><th>cat_code</th></tr>
+<tr><td>1000</td><td>*/*/*/101/S/<b>O</b></td><td>IN_SUB (사급입고 — sobkz O를 구매보다 먼저!)</td></tr>
+<tr><td>1001~1002</td><td>*/*/<b>RMWF</b>/101·102/S·H</td><td>IN_PRD (생산입고 — glvor로 구매와 구분)</td></tr>
+<tr><td>1010~1011</td><td>*/*/*/101·102/S·H</td><td>IN_PO (구매입고 — 위에 안 걸린 101)</td></tr>
+<tr><td>1020</td><td>131/S</td><td>IN_PRD</td></tr>
+<tr><td>1030~1031</td><td>301·305/S</td><td>IN_TRF</td></tr>
+<tr><td>1040~1041</td><td>651·653/S</td><td>IN_RET</td></tr>
+<tr><td>1050</td><td>309/S</td><td>IN_MTM</td></tr>
+<tr><td>1060~1061</td><td>701·711/S</td><td>IN_ADJ</td></tr>
+<tr><td>1100~1101</td><td>601/H·602/S</td><td>OUT_SLS</td></tr>
+<tr><td>1110~1111</td><td>261/H·262/S</td><td>OUT_PRD</td></tr>
+<tr><td>1120</td><td>541/H</td><td>OUT_SUB</td></tr>
+<tr><td>1130~1131</td><td>301·305/H</td><td>OUT_TRF</td></tr>
+<tr><td>1140~1141</td><td>122·161/H</td><td>OUT_RTV</td></tr>
+<tr><td>1150~1151</td><td>201/H·202/S</td><td>OUT_CC</td></tr>
+<tr><td>1160~1161</td><td>331·333/H</td><td>OUT_EXP</td></tr>
+<tr><td>1170</td><td>309/H</td><td>OUT_MTM</td></tr>
+<tr><td>1180~1182</td><td>702·712·551/H</td><td>OUT_ADJ</td></tr>
+<tr><td>5000</td><td>*/*/<b>RMRP</b>/—/*/*</td><td>ADJ_PPV (송장 가격차이)</td></tr>
+</table>
+<div class="note"><b>설계 읽기</b> — 규칙 순서에 업무 판단이 들어 있습니다: ① 같은 101/S라도 <b>사급(sobkz O) → 생산(glvor RMWF) → 구매(나머지)</b> 순으로 좁은 조건이 먼저(1000→1001→1010). ② 이동유형 쌍(101/102, 601/602…)은 원문서/취소문서 대칭 — 취소는 같은 칼럼의 반대 부호로 상계. ③ 309(자재간 전환)는 S/H로 IN_MTM/OUT_MTM에 나눠 담습니다.</div>
+
+<h3>6.3 폴백과 누락 감지</h3>
+<ul class="expl">
+  <li>어떤 규칙에도 안 걸리면: ZU→<b>IN_OTH</b>, VN→<b>OUT_OTH</b>, PC→runref 유무로 <b>ADJ_ML/ADJ_REV</b>. 라인이 버려지지 않으므로 diff=0은 유지되지만, OTH가 커진다는 것은 <b>매핑이 모르는 이동</b>이 있다는 신호입니다.</li>
+  <li><b>실측 상태</b> — 1710/2020/001~005 기준 IN_OTH·OUT_OTH 합계 <b>0.00</b>: 현재 매핑이 이 플랜트의 모든 이동을 100% 명시 분류. (플랜트 전체: IN_PO 147,594,072.61 / OUT_SLS 22,353,949.26 / OUT_PRD 3,314,710.80)</li>
+  <li><b>운영 모니터링</b> — 월 결산 후 <code>SELECT SUM(in_oth_amt), SUM(out_oth_amt) FROM ytf_co_sl_stock(...)</code>이 0이 아니면 6.4 절차로 규칙 추가.</li>
+</ul>
+
+<h3>6.4 새 이동유형 추가 워크스루</h3>
+<p>예: 이동유형 <b>561(기초재고 인수, S)</b>이 새로 쓰이기 시작해 IN_OTH로 잡히는 경우 —</p>
+<ol>
+  <li>확인: 어떤 라인인가? MLDOC categ(ZU) + MATDOC bwart(561)/shkzg(S) 조합 파악 (5부 ②~③ 방식)</li>
+  <li>분류 결정: 업무적으로 "재고조정 입고(IN_ADJ)"로 본다고 결정</li>
+  <li>등록: <code>SEQNR=1062, CATEG='*', PTYP='*', GLVOR='*', BWART='561', SHKZG='S', SOBKZ='*', CAT_CODE='IN_ADJ'</code> — 기존 1060~1061 옆 번호로. <b>코드 수정·이관 불필요</b>, 테이블 엔트리만.</li>
+  <li>검증: 해당 기간 TF 재실행 → IN_OTH 감소분 = IN_ADJ 증가분, diff 여전히 0 확인</li>
+</ol>
+<div class="warn"><b>주의</b> — '*'를 너무 넓게 쓰면(예: BWART '*'/SHKZG '*') 의도치 않은 라인까지 삼킵니다. 반드시 <b>구체 규칙은 작은 seqnr, 넓은 규칙은 큰 seqnr</b> 원칙을 지키고, 추가 후 다른 카테고리 합계가 변하지 않았는지 전후 비교하세요.</div>
+
+<!-- ============ 7부 ============ -->
+<h2 class="sec" id="s7">7부. 부록</h2>
+
+<h3>7.1 용어집</h3>
+<table>
+<tr><th>용어</th><th>의미</th></tr>
+<tr><td>KALNR</td><td>원가추정번호 — ML이 자재(+세그먼트)를 식별하는 내부 번호</td></tr>
+<tr><td>BWKEY</td><td>평가영역 — 재고금액을 관리하는 조직 단위(대개 플랜트)</td></tr>
+<tr><td>BWTAR</td><td>평가유형 — 분할평가 시 하위 구분(미사용이면 '')</td></tr>
+<tr><td>POPER / JAHRPER</td><td>전기기간(001~016) / 연도+기간 7자리(2020005)</td></tr>
+<tr><td>CURTP</td><td>통화유형: 10 회사코드, 30 그룹, 40 경화</td></tr>
+<tr><td>RLDNR</td><td>원장(Ledger). 0L = 선도원장</td></tr>
+<tr><td>CATEG</td><td>ML 범주: AB 기초 / ZU 입고 / VN 출고 / PC 가격변경 / EB 기말</td></tr>
+<tr><td>BWART / SHKZG</td><td>이동유형(101, 261, 601…) / 차대변(S 증가, H 감소)</td></tr>
+<tr><td>SOBKZ</td><td>특수재고(O 사급, E 판매오더, Q 프로젝트)</td></tr>
+<tr><td>GLVOR / PTYP</td><td>G/L 업무(RMWE 입고, RMRU 투입, RMRP 송장) / ML 프로세스 유형</td></tr>
+<tr><td>RUNREF</td><td>ML 결산 런 참조(≠'' 이면 결산 정산 라인)</td></tr>
+<tr><td>LBKUM / SALK3</td><td>ML 재고수량 / 재고금액</td></tr>
+<tr><td>ESTPRD/ESTKDM/MSTPRD/MSTKDM</td><td>단층(E)/다층(M) × 가격(PRD)/환율(KDM) 차이</td></tr>
+</table>
+
+<h3>7.2 검증 이력 (2026-07-13)</h3>
+<table>
+<tr><th>단계</th><th>내용</th><th>실측</th></tr>
+<tr><td>점검</td><td>품질 체크리스트 대조 + 실행 점검(1710/2020/001~005)</td><td>정합성 diff=0(전 행) 확인. 단, <b>중복 발견</b>: TG14 ×10, FG226 ×6 등 4개 그룹</td></tr>
+<tr><td>수정 ①</td><td>lt_mast1 도입, 최종 조인 교체(팬아웃 제거)</td><td>215→197행(중복 18행 제거), 값 보존</td></tr>
+<tr><td>수정 ②</td><td>lt_doc 분리 + lt_mat을 참조 문서로 제한(전량 스캔 제거)</td><td>분류 결과 불변(rows_with_moves=90), diff=0 유지</td></tr>
+<tr><td>재검증</td><td>중복·값·정합성·매핑 4개 관점</td><td>dup 0 / TG14 1행(16.000/203.90) / diff_bad 0 / OTH 0</td></tr>
+</table>
+
+<h3>7.3 AMDP 품질 체크리스트 대조 <span class="badge b-dev">개발</span></h3>
+<p><a href="03_amdp_concept.html#p6">03 문서 6부</a>의 12항목에 이 구현을 대조:</p>
+<table>
+<tr><th>#</th><th>항목</th><th>이 구현</th></tr>
+<tr><td>①</td><td>선언형 우선</td><td>✅ 커서/루프 0, 블록 10개 전부 SELECT 체인</td></tr>
+<tr><td>②</td><td>SELECT * 금지</td><td>✅ 전 블록 명시 컬럼</td></tr>
+<tr><td>③</td><td>필터 조기</td><td>✅ p_bwkey를 블록 1에서, 기간·curtp·rldnr을 블록 3·4에서. matdoc 제한은 수정 ②로 달성</td></tr>
+<tr><td>④</td><td>READ-ONLY</td><td>✅</td></tr>
+<tr><td>⑤</td><td>USING 최소·정확</td><td>✅ 7개 전부 실사용</td></tr>
+<tr><td>⑥</td><td>클라이언트 명시</td><td>✅ 전 블록 SESSION_CONTEXT('CLIENT') + 조인에 mandt 포함</td></tr>
+<tr><td>⑦</td><td>ORDER BY 소비 시점만</td><td>✅ 중간 정렬 0(소비자인 ALV가 정렬)</td></tr>
+<tr><td>⑧</td><td>형변환 명시</td><td>✅ mjahr/aworg·zeile/awitem CAST 통일 + CASE 가드</td></tr>
+<tr><td>⑨</td><td>동적 SQL 금지</td><td>✅ 없음</td></tr>
+<tr><td>⑩</td><td>이름 규약</td><td>✅ lt_*/p_* 일관</td></tr>
+<tr><td>⑪</td><td>큰 중간결과 경계</td><td>✅ UNION은 드라이버 dedup 목적으로만(블록 9), DISTINCT는 matdoc 제한 서브쿼리만</td></tr>
+<tr><td>⑫</td><td>테스트 용이성</td><td>✅ diff 칼럼 = 내장 자기검증 + 실측 검증 이력(7.2)</td></tr>
+</table>
+
+<footer>
+  수불부 AMDP 해부 · 실측: client 100, 플랜트 1710/2020 · 시리즈: <a href="01_cds_concept.html">01 CDS</a> · <a href="02_practice_guide.html">02 CDS 실습</a> · <a href="03_amdp_concept.html">03 AMDP</a> · <a href="04_amdp_practice_guide.html">04 AMDP 실습</a> · <a href="05_flight_data_model.html">05 데이터 모델</a> · 06 수불부 해부
+</footer>
+</div>
+</body>
+</html>
