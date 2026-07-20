@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAP RAP 실습 가이드 — YR_FLIGHT 전체 워크스루</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --basic-bg:#dafbe1; --basic-fg:#116329; --adv-bg:#fff1e5; --adv-fg:#953800;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --basic-bg:#12261e; --basic-fg:#3fb950; --adv-bg:#2d1e12; --adv-fg:#db8b4c;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --basic-bg:#12261e; --basic-fg:#3fb950; --adv-bg:#2d1e12; --adv-fg:#db8b4c;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --basic-bg:#dafbe1; --basic-fg:#116329; --adv-bg:#fff1e5; --adv-fg:#953800;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","맑은 고딕",sans-serif;
+    line-height:1.75;font-size:16px;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 120px;}
+  header.top{padding:48px 20px 32px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  header.top h1{font-size:2rem;margin:0 0 8px;}
+  header.top p{color:var(--muted);margin:4px 0;}
+  nav.toc{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:18px 22px;margin:28px 0;}
+  nav.toc h2{font-size:1rem;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  nav.toc ol{margin:0;padding-left:22px;}
+  nav.toc a{color:var(--accent);text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+  h2.sec{font-size:1.5rem;margin:56px 0 8px;padding-top:12px;border-top:2px solid var(--border);}
+  h3{font-size:1.18rem;margin:32px 0 6px;}
+  h4{font-size:1.02rem;margin:22px 0 4px;}
+  p{margin:10px 0;}
+  code{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;
+    padding:1px 5px;font-family:"SF Mono",Consolas,"Courier New",monospace;font-size:.88em;}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;
+    padding:14px 16px;overflow-x:auto;margin:14px 0;}
+  pre code{background:none;border:none;padding:0;font-size:.85rem;line-height:1.6;color:var(--code-fg);}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:20px;
+    vertical-align:middle;margin-left:8px;letter-spacing:.02em;}
+  .b-basic{background:var(--basic-bg);color:var(--basic-fg);}
+  .b-adv{background:var(--adv-bg);color:var(--adv-fg);}
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:.9rem;display:block;overflow-x:auto;}
+  th,td{border:1px solid var(--border);padding:7px 11px;text-align:left;vertical-align:top;}
+  th{background:var(--th);font-weight:600;}
+  .note{background:var(--card);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:16px 0;}
+  .note b{color:var(--accent);}
+  .warn{background:var(--adv-bg);border-left:4px solid var(--adv-fg);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:16px 0;}
+  .warn b{color:var(--adv-fg);}
+  .classic{background:var(--basic-bg);border-left:4px solid var(--basic-fg);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:16px 0;}
+  .classic b{color:var(--basic-fg);}
+  .kw{color:var(--kw);} .str{color:var(--str);} .com{color:var(--com);}
+  .diagram{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;
+    margin:16px 0;overflow-x:auto;}
+  .diagram pre{background:none;border:none;padding:0;margin:0;color:var(--fg);font-size:.82rem;}
+  .pill{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:6px;
+    padding:1px 8px;font-size:.82rem;font-family:monospace;}
+  a.exlink{color:var(--accent);font-size:.85rem;text-decoration:none;border:1px dashed var(--border);
+    border-radius:6px;padding:1px 7px;}
+  .themebtn{position:fixed;top:14px;right:14px;background:var(--card);color:var(--fg);
+    border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem;z-index:10;}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem;}
+  details{border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin:14px 0;background:var(--card);}
+  details summary{cursor:pointer;font-weight:600;color:var(--accent);}
+  details pre{margin-top:10px;}
+  .result{background:var(--card);border:1px dashed var(--accent);border-radius:8px;padding:10px 14px;margin:12px 0;
+    font-family:"SF Mono",Consolas,monospace;font-size:.83rem;overflow-x:auto;}
+</style>
+</head>
+<body>
+<button class="themebtn" onclick="(function(){var r=document.documentElement;var d=(r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));r.setAttribute('data-theme',d==='dark'?'light':'dark');})()">◐ 테마</button>
+<header class="top">
+  <div class="wrap" style="padding:0;">
+    <h1>SAP RAP 실습 가이드 — YR_FLIGHT 전체 워크스루</h1>
+    <p>테이블부터 Fiori Elements 프리뷰까지, 라이브 시스템의 실물 RAP 스택 해부 — RAP 3부작 中 2부</p>
+    <p>모든 소스는 이 시스템(S/4HANA 2021, client 100)에 <b>실제로 활성화되어 있는 오브젝트</b>에서 2026-07-20 추출한 원문입니다.</p>
+    <p><span class="badge b-basic">기초</span> 꼭 알아야 할 핵심 &nbsp; <span class="badge b-adv">심화</span> 한 단계 더</p>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#overview">§1 실습 개요</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#step1">Step 1. 테이블 — YSFLIGHT &amp; draft 테이블</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#step2">Step 2. Interface View — YR_FLIGHT + Value Help 3종</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#step3">Step 3. Behavior Definition — BDEF 해부</a> <span class="badge b-basic">기초</span><span class="badge b-adv">심화</span></li>
+    <li><a href="#step4">Step 4. Behavior Pool — lhc_ 핸들러</a> <span class="badge b-adv">심화</span></li>
+    <li><a href="#step5">Step 5. Projection — YC_FLIGHT + @UI</a> <span class="badge b-basic">기초</span><span class="badge b-adv">심화</span></li>
+    <li><a href="#step6">Step 6. Service Definition / Binding</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#step7">Step 7. Fiori Elements 프리뷰</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#eml-lab">§3 EML 실습 (라이브 실측)</a> <span class="badge b-adv">심화</span></li>
+    <li><a href="#assignments">§4 미니 과제</a> <span class="badge b-basic">기초</span><span class="badge b-adv">심화</span></li>
+  </ol>
+</nav>
+
+<!-- ================= §1 ================= -->
+<h2 class="sec" id="overview">§1 실습 개요 <span class="badge b-basic">기초</span></h2>
+<p><b>만드는 것</b>: 항공편 관리 Fiori 앱. List Report에서 항공편을 검색·조회하고, Object Page에서 상세를 보고, Edit로 수정(draft 자동 저장)하고, 저장 시 4종 validation이 데이터를 지켜줍니다. UI5 코드는 한 줄도 쓰지 않습니다.</p>
+<p>스택 전체 그림은 <a class="exlink" href="08_rap_concept.html#arch">08 4부 아키텍처 ▸</a> 를 옆에 두고 보세요. 이 문서의 Step 번호가 그 계층도와 1:1입니다.</p>
+
+<h3>오브젝트 목록 (패키지 YCO_TEMP, 전부 활성)</h3>
+<table>
+<tr><th>Step</th><th>오브젝트</th><th>타입</th><th>역할</th></tr>
+<tr><td>1</td><td><code>YSFLIGHT</code></td><td>TABL</td><td>저장 테이블 (SFLIGHT 사본 + 관리필드 5종)</td></tr>
+<tr><td>1</td><td><code>YSFLIGHT_D</code></td><td>TABL</td><td>draft 테이블</td></tr>
+<tr><td>2</td><td><code>YR_FLIGHT</code></td><td>DDLS</td><td>Interface(root) view — BO의 구조</td></tr>
+<tr><td>2</td><td><code>YI_CARRIER_VH</code> / <code>YI_CONNECTION_VH</code> / <code>YI_PLANETYPE_VH</code></td><td>DDLS</td><td>Value Help(F4) 뷰 3종</td></tr>
+<tr><td>3</td><td><code>YR_FLIGHT</code></td><td>BDEF</td><td>행동 선언 (managed + draft)</td></tr>
+<tr><td>4</td><td><code>YCL_BP_R_FLIGHT</code></td><td>CLAS</td><td>Behavior pool — lhc_ 핸들러(validation 4종)</td></tr>
+<tr><td>5</td><td><code>YC_FLIGHT</code></td><td>DDLS+BDEF</td><td>Projection (UI용 선별 + @UI 어노테이션)</td></tr>
+<tr><td>6</td><td><code>YUI_FLIGHT_O4</code></td><td>SRVD+SRVB</td><td>서비스 정의/바인딩 (OData V4 UI)</td></tr>
+</table>
+
+<div class="warn"><b>도구 안내</b> — RAP 오브젝트(DDLS/BDEF/SRVD/SRVB)는 <b>ADT(Eclipse) 전용</b>입니다. SE80에서는 열 수도 만들 수도 없습니다. 데이터 소재는 표준 항공편 모델의 사본입니다 — 모델 구조는 <span class="pill">05_flight_data_model.html</span> 참조.</div>
+
+<!-- ================= Step 1 ================= -->
+<h2 class="sec" id="step1">Step 1. 테이블 — YSFLIGHT &amp; YSFLIGHT_D <span class="badge b-basic">기초</span></h2>
+
+<h3>① 이 단계에서 만드는 것</h3>
+<p>저장 테이블. SFLIGHT의 구조를 복사한 <code>YSFLIGHT</code>에 <b>RAP 관리필드 5종</b>을 추가했습니다. 그리고 draft용 <code>YSFLIGHT_D</code>가 별도로 필요합니다.</p>
+
+<h3>② 소스 전문 — YSFLIGHT</h3>
+<pre><code>@EndUserText.label : 'Flug'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_CHARACTER_NUMERIC
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #ALLOWED
+define table ysflight {
+  @AbapCatalog.foreignKey.keyType : #KEY
+  @AbapCatalog.foreignKey.screenCheck : true
+  key mandt             : s_mandt not null
+    with foreign key [0..*,1] t000
+      where mandt = ysflight.mandt;
+  @AbapCatalog.foreignKey.screenCheck : true
+  key carrid            : s_carr_id not null
+    with foreign key scarr
+      where mandt = ysflight.mandt
+        and carrid = ysflight.carrid;
+  @AbapCatalog.foreignKey.label : 'Prüfung gegen Flugplan'
+  @AbapCatalog.foreignKey.keyType : #KEY
+  @AbapCatalog.foreignKey.screenCheck : true
+  key connid            : s_conn_id not null
+    with foreign key [0..*,1] spfli
+      where mandt = ysflight.mandt
+        and carrid = ysflight.carrid
+        and connid = ysflight.connid;
+  key fldate            : s_date not null;
+  @Semantics.amount.currencyCode : 'ysflight.currency'
+  price                 : s_price not null;
+  @AbapCatalog.foreignKey.keyType : #NON_KEY
+  @AbapCatalog.foreignKey.screenCheck : true
+  currency              : s_currcode not null
+    with foreign key [1..*,1] scurx
+      where currkey = ysflight.currency;
+  @AbapCatalog.foreignKey.label : 'Prüfung gegen Flugzeug'
+  @AbapCatalog.foreignKey.keyType : #NON_KEY
+  @AbapCatalog.foreignKey.screenCheck : true
+  planetype             : s_planetye not null
+    with foreign key [0..*,1] saplane
+      where mandt = ysflight.mandt
+        and planetype = ysflight.planetype;
+  seatsmax              : s_seatsmax not null;
+  seatsocc              : s_seatsocc not null;
+  @Semantics.amount.currencyCode : 'ysflight.currency'
+  paymentsum            : s_sum not null;
+  seatsmax_b            : s_smax_b not null;
+  seatsocc_b            : s_socc_b not null;
+  seatsmax_f            : s_smax_f not null;
+  seatsocc_f            : s_socc_f not null;
+  created_by            : abp_creation_user;
+  created_at            : abp_creation_tstmpl;
+  last_changed_by       : abp_lastchange_user;
+  last_changed_at       : abp_lastchange_tstmpl;
+  local_last_changed_at : abp_locinst_lastchange_tstmpl;
+
+}</code></pre>
+
+<h3>③ 해설 — 관리필드 5종은 왜 필요한가</h3>
+<table>
+<tr><th>필드</th><th>도메인</th><th>쓰임</th></tr>
+<tr><td><code>created_by/created_at</code></td><td>abp_creation_*</td><td>생성자/생성시각 — 프레임워크가 자동 기록 (CDS의 <code>@Semantics.user.createdBy</code> 등과 짝)</td></tr>
+<tr><td><code>last_changed_by/last_changed_at</code></td><td>abp_lastchange_*</td><td>최종 변경자/시각 — <b>lock master의 total etag</b>로 사용 (BO 전체 충돌 감지)</td></tr>
+<tr><td><code>local_last_changed_at</code></td><td>abp_locinst_lastchange_tstmpl</td><td>이 엔티티 인스턴스의 변경 시각 — <b>etag master</b>로 사용 (행 단위 낙관적 잠금)</td></tr>
+</table>
+<p>즉 마지막 두 필드는 "있으면 좋은 감사 필드"가 아니라 <b>잠금 메커니즘의 부품</b>입니다(<a class="exlink" href="08_rap_concept.html#tx-model">08 6.4 ▸</a>). 신규 RAP 테이블을 설계할 땐 이 5종을 표준 세트로 넣는 것이 관례입니다.</p>
+
+<h3>② 소스 전문 — YSFLIGHT_D (draft 테이블)</h3>
+<pre><code>@EndUserText.label : 'Draft table for YR_FLIGHT'
+@AbapCatalog.enhancement.category : #EXTENSIBLE_ANY
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table ysflight_d {
+  key mandt             : mandt not null;
+  key carrierid         : s_carr_id not null;
+  key connectionid      : s_conn_id not null;
+  key flightdate        : s_date not null;
+  @Semantics.amount.currencyCode : 'ysflight_d.currencycode'
+  price                 : s_price;
+  currencycode          : s_currcode;
+  planetype             : s_planetye;
+  maximumseats          : s_seatsmax;
+  occupiedseats         : s_seatsocc;
+  occupancyrate         : abap.dec(5,1);
+  @Semantics.amount.currencyCode : 'ysflight_d.currencycode'
+  paymentssum           : s_sum;
+  maximumseatsbusiness  : s_smax_b;
+  occupiedseatsbusiness : s_socc_b;
+  maximumseatsfirst     : s_smax_f;
+  occupiedseatsfirst    : s_socc_f;
+  createdby             : abp_creation_user;
+  createdat             : abp_creation_tstmpl;
+  lastchangedby         : abp_lastchange_user;
+  lastchangedat         : abp_lastchange_tstmpl;
+  locallastchangedat    : abp_locinst_lastchange_tstmpl;
+  "%admin"              : include sych_bdl_draft_admin_inc;
+
+}</code></pre>
+<p>주목할 차이 세 가지: ① 필드명이 테이블 필드명(carrid)이 아니라 <b>CDS 엔티티 필드명 소문자</b>(carrierid) — draft는 BO 관점의 저장소이기 때문. ② 계산필드 <code>occupancyrate</code>도 컬럼으로 존재 — 편집 중 값을 들고 있어야 하므로. ③ 끝의 <code>"%admin" include sych_bdl_draft_admin_inc</code> — draft 소유자·시각 등 관리 정보. ADT에서 BDEF의 draft table 이름에 커서를 두고 퀵픽스(Ctrl+1)를 쓰면 이 테이블을 <b>자동 생성</b>해 줍니다 — 수작업으로 만들지 않는 것이 원칙입니다.</p>
+
+<div class="classic"><b>클래식이라면</b> — 테이블 만들기는 같습니다(SE11/ADT). 다른 점은 "편집 중 상태"를 위해 메모리(전역 변수)와 ENQUEUE에 의존했지, 별도 테이블을 두지 않았다는 것. draft 테이블은 그 상태를 DB로 내린 것입니다.</div>
+
+<h3>⑤ 확인 방법</h3>
+<p>ADT에서 두 테이블을 열고 활성(no ⚠) 상태 확인. SE16/데이터 프리뷰(F8)로 YSFLIGHT에 데이터가 있는지 확인(이 시스템엔 SFLIGHT 사본 데이터가 로드되어 있음).</p>
+
+<!-- ================= Step 2 ================= -->
+<h2 class="sec" id="step2">Step 2. Interface View — YR_FLIGHT + Value Help 3종 <span class="badge b-basic">기초</span></h2>
+
+<h3>① 이 단계에서 만드는 것</h3>
+<p>BO의 <b>구조</b>가 될 root view entity. 테이블 필드에 CamelCase 별칭을 붙이고, association으로 관련 정보를 연결하고, 계산필드(점유율)를 추가합니다.</p>
+
+<h3>② 소스 전문 — YR_FLIGHT</h3>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Flight Root View (RAP GRID)'
+define root view entity YR_FLIGHT
+  as select from ysflight
+  association [0..1] to scarr      as _Carrier    on $projection.CarrierId = _Carrier.carrid
+  association [0..1] to spfli      as _Connection on  $projection.CarrierId    = _Connection.carrid
+                                                  and $projection.ConnectionId = _Connection.connid
+  association [0..1] to saplane    as _Plane      on $projection.PlaneType = _Plane.planetype
+  association [0..1] to I_Currency as _Currency   on $projection.CurrencyCode = _Currency.Currency
+{
+  key carrid                as CarrierId,
+  key connid                as ConnectionId,
+  key fldate                as FlightDate,
+      @Semantics.amount.currencyCode: 'CurrencyCode'
+      price                 as Price,
+      currency              as CurrencyCode,
+      planetype             as PlaneType,
+      seatsmax              as MaximumSeats,
+      seatsocc              as OccupiedSeats,
+      cast( case when seatsmax > 0
+                 then division( seatsocc * 100, seatsmax, 1 )
+                 else cast( 0 as abap.dec(5,1) )
+            end as abap.dec(5,1) ) as OccupancyRate,
+      @Semantics.amount.currencyCode: 'CurrencyCode'
+      paymentsum            as PaymentsSum,
+      seatsmax_b            as MaximumSeatsBusiness,
+      seatsocc_b            as OccupiedSeatsBusiness,
+      seatsmax_f            as MaximumSeatsFirst,
+      seatsocc_f            as OccupiedSeatsFirst,
+      @Semantics.user.createdBy: true
+      created_by            as CreatedBy,
+      @Semantics.systemDateTime.createdAt: true
+      created_at            as CreatedAt,
+      @Semantics.user.lastChangedBy: true
+      last_changed_by       as LastChangedBy,
+      @Semantics.systemDateTime.lastChangedAt: true
+      last_changed_at       as LastChangedAt,
+      @Semantics.systemDateTime.localInstanceLastChangedAt: true
+      local_last_changed_at as LocalLastChangedAt,
+      _Carrier,
+      _Connection,
+      _Plane,
+      _Currency
+}</code></pre>
+
+<h3>③ 해설</h3>
+<ul>
+  <li><code>define <b>root</b> view entity</code> — 이 뷰가 BO 트리의 뿌리임을 선언. 단일 엔티티 BO라도 root는 필수입니다. (자식이 있으면 자식 쪽에 <code>composition</code>을 씁니다 — 이 실습은 단일 엔티티)</li>
+  <li><b>CamelCase 별칭</b> — RAP 세계의 필드명은 CDS 별칭입니다. 이후 BDEF·핸들러·EML·OData·화면까지 전부 <code>CarrierId</code>로 통하고, <code>carrid</code>는 저장 시점에만 등장합니다(BDEF의 mapping).</li>
+  <li><b>OccupancyRate</b> — <code>cast(case...division(...))</code> 계산필드. DB에 저장되지 않고 조회 시 계산됩니다. 뒤에서 BDEF가 <code>field ( readonly )</code>로 막고, draft 테이블에는 컬럼으로 존재하는 것까지가 한 세트입니다.</li>
+  <li><code>@Semantics.user.createdBy</code> 등 — 관리필드의 <b>의미</b>를 선언. managed 프레임워크가 이 어노테이션을 보고 자동으로 채웁니다.</li>
+  <li>association 4개는 화면·후속 뷰에서 쓸 연결 통로입니다. 문법은 <span class="pill">01_cds_concept.html</span> 3부 참조.</li>
+</ul>
+
+<h3>② 소스 전문 — Value Help 뷰 3종</h3>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Value Help: Carrier (SCARR)'
+@ObjectModel.resultSet.sizeCategory: #XS
+define view entity YI_CARRIER_VH
+  as select from scarr
+{
+      @ObjectModel.text.element: ['CarrierName']
+  key carrid   as CarrierId,
+      @Semantics.text: true
+      carrname as CarrierName,
+      currcode as CurrencyCode
+}</code></pre>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Value Help: Connection (SPFLI)'
+@ObjectModel.resultSet.sizeCategory: #XS
+define view entity YI_CONNECTION_VH
+  as select from spfli
+{
+  key carrid   as CarrierId,
+  key connid   as ConnectionId,
+      cityfrom as CityFrom,
+      cityto   as CityTo
+}</code></pre>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Value Help: Plane Type (SAPLANE)'
+@ObjectModel.resultSet.sizeCategory: #XS
+define view entity YI_PLANETYPE_VH
+  as select from saplane
+{
+  key planetype as PlaneType
+}</code></pre>
+<div class="classic"><b>클래식이라면</b> — 검색 도움말(SE11 매치코드)을 만들거나 <code>F4IF_INT_TABLE_VALUE_REQUEST</code>를 호출했습니다. RAP에선 "F4용 CDS 뷰 + 소비 측 <code>@Consumption.valueHelpDefinition</code>(Step 5)" 조합입니다. <code>@ObjectModel.resultSet.sizeCategory: #XS</code>는 "항목이 적으니 드롭다운으로 즉시 로드해도 된다"는 힌트입니다.</div>
+
+<h3>⑤ 확인 방법</h3>
+<p>ADT에서 YR_FLIGHT 열고 F8(데이터 프리뷰) — OccupancyRate가 계산되어 나오는지 확인. 이 시점엔 아직 "읽기 전용 뷰"일 뿐입니다. 행동은 다음 단계부터.</p>
+
+<!-- ================= Step 3 ================= -->
+<h2 class="sec" id="step3">Step 3. Behavior Definition — BDEF 해부 <span class="badge b-basic">기초</span><span class="badge b-adv">심화</span></h2>
+
+<h3>① 이 단계에서 만드는 것</h3>
+<p>BO의 <b>행동 선언</b>. ADT에서 YR_FLIGHT(DDLS) 우클릭 → New Behavior Definition을 하면 뼈대가 생성되고, 구현 유형(managed)을 고릅니다. BDEF는 CDS와 같은 이름을 씁니다.</p>
+
+<h3>② 소스 전문 — BDEF YR_FLIGHT</h3>
+<pre><code>managed implementation in class ycl_bp_r_flight unique;
+strict;
+with draft;
+
+define behavior for YR_FLIGHT alias Flight
+persistent table ysflight
+draft table ysflight_d
+etag master LocalLastChangedAt
+lock master total etag LastChangedAt
+authorization master ( global )
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) OccupancyRate, CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, LocalLastChangedAt;
+  field ( readonly : update ) CarrierId, ConnectionId, FlightDate;
+  field ( mandatory : create ) CarrierId, ConnectionId, FlightDate;
+
+  validation validateCarrier    on save { create; field CarrierId; }
+  validation validateConnection on save { create; field CarrierId, ConnectionId; }
+  validation validatePlaneType  on save { create; field PlaneType; }
+  validation validateSeats      on save { create; field MaximumSeats, OccupiedSeats,
+                                          MaximumSeatsBusiness, OccupiedSeatsBusiness,
+                                          MaximumSeatsFirst, OccupiedSeatsFirst; }
+
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare
+  {
+    validation validateCarrier;
+    validation validateConnection;
+    validation validatePlaneType;
+    validation validateSeats;
+  }
+
+  mapping for ysflight
+  {
+    CarrierId             = carrid;
+    ConnectionId          = connid;
+    FlightDate            = fldate;
+    Price                 = price;
+    CurrencyCode          = currency;
+    PlaneType             = planetype;
+    MaximumSeats          = seatsmax;
+    OccupiedSeats         = seatsocc;
+    PaymentsSum           = paymentsum;
+    MaximumSeatsBusiness  = seatsmax_b;
+    OccupiedSeatsBusiness = seatsocc_b;
+    MaximumSeatsFirst     = seatsmax_f;
+    OccupiedSeatsFirst    = seatsocc_f;
+    CreatedBy             = created_by;
+    CreatedAt             = created_at;
+    LastChangedBy         = last_changed_by;
+    LastChangedAt         = last_changed_at;
+    LocalLastChangedAt    = local_last_changed_at;
+  }
+}</code></pre>
+
+<h3>③ 해설 — 줄 단위로</h3>
+<table>
+<tr><th>선언</th><th>의미</th></tr>
+<tr><td><code>managed implementation in class ycl_bp_r_flight unique;</code></td><td>구현 유형 managed + 구현 클래스(Step 4) 지정. <code>unique</code>: 이 클래스 하나가 전 행동을 구현</td></tr>
+<tr><td><code>strict;</code></td><td>엄격 모드 — 최신 문법·검사 강제. ABAP Cloud 호환의 전제. <b>이 시스템(756)에선 <code>strict;</code>만 가능</b> — <code>strict(1)</code>/<code>strict(2)</code> 숫자형은 구문오류(실측). 2022+에선 strict(2)가 표준</td></tr>
+<tr><td><code>with draft;</code></td><td>draft 활성화 (<a class="exlink" href="08_rap_concept.html#tx-model">08 6.3 ▸</a>)</td></tr>
+<tr><td><code>alias Flight</code></td><td>이후 모든 코드(EML 포함)에서 쓸 엔티티 별명</td></tr>
+<tr><td><code>persistent table / draft table</code></td><td>저장소 두 곳 지정 — managed가 알아서 읽고 씀</td></tr>
+<tr><td><code>etag master LocalLastChangedAt</code></td><td>행 단위 버전 도장 필드 (낙관적 잠금)</td></tr>
+<tr><td><code>lock master total etag LastChangedAt</code></td><td>이 엔티티가 잠금의 주인(root)이며 BO 전체 충돌 감지 필드 지정</td></tr>
+<tr><td><code>authorization master ( global )</code></td><td>권한 검사 지점 선언 — 구현은 핸들러의 <code>get_global_authorizations</code> (이 실습은 빈 구현 = 전부 허용)</td></tr>
+<tr><td><code>create; update; delete;</code></td><td>표준 CRUD 활성화 — <b>구현 코드 없음</b>, 선언이 곧 기능</td></tr>
+<tr><td><code>field ( readonly ) ...</code></td><td>정적 feature control — 계산필드·관리필드는 입력 불가</td></tr>
+<tr><td><code>field ( readonly : update ) 키3종</code></td><td>키는 생성 시엔 입력, 수정 시엔 잠김 — 클래식에서 <code>LOOP AT SCREEN</code>으로 하던 일</td></tr>
+<tr><td><code>field ( mandatory : create ) 키3종</code></td><td>생성 시 필수 — 화면에 자동으로 * 표시</td></tr>
+<tr><td><code>validation ... on save { create; field X; }</code></td><td>저장 시점 검증 + <b>트리거 조건</b>: 생성될 때, 또는 X 필드가 바뀔 때만 실행 (전 행 재검증 아님 — 성능 설계)</td></tr>
+<tr><td><code>draft action Edit/Activate/Discard/Resume</code></td><td>draft 표준 액션 4종 — 선언만 하면 프레임워크가 구현</td></tr>
+<tr><td><code>draft determine action Prepare { validation ...; }</code></td><td>draft→활성 전환 직전(Activate 전) 실행할 검증 목록 — "저장 버튼 눌렀을 때 검증"의 정체</td></tr>
+<tr><td><code>mapping for ysflight { ... }</code></td><td>CDS 필드명 ↔ 테이블 필드명 대응표 — managed의 자동 저장이 이 표를 사용</td></tr>
+</table>
+
+<div class="classic"><b>클래식이라면</b> — 이 55줄이 대체하는 것: 화면 속성 제어 로직(LOOP AT SCREEN), 필수 입력 체크, ENQUEUE/DEQUEUE 호출, 변경 감지 후 UPDATE문, PAI 체크 모듈 등록, 기능 코드 라우팅. 대략 모듈풀 프로그램 절반이 <b>선언</b>으로 바뀐 셈입니다.</div>
+
+<h3>⑤ 확인 방법 / ⑥ 함정</h3>
+<p>ADT에서 BDEF 활성화 시 문제 뷰에 경고가 없어야 합니다. 이 시점에 "구현 클래스에 validation 메서드가 없다"는 경고가 뜨는 게 정상 — Step 4에서 채웁니다(BDEF에서 Ctrl+1 퀵픽스로 메서드 뼈대 자동 생성 가능).</p>
+<div class="warn"><b>함정(실측)</b> — 온라인 예제의 <code>strict ( 2 )</code>를 이 시스템에 붙여넣으면 "Unexpected character" 구문오류. 756은 숫자형 strict를 모릅니다. <code>strict;</code>로 바꾸면 됩니다.</div>
+
+<!-- ================= Step 4 ================= -->
+<h2 class="sec" id="step4">Step 4. Behavior Pool — lhc_ 핸들러 <span class="badge b-adv">심화</span></h2>
+
+<h3>① 이 단계에서 만드는 것</h3>
+<p>BDEF가 선언한 것 중 <b>프레임워크가 못 하는 것</b>(업무 검증, 권한)의 구현. 글로벌 클래스는 그릇일 뿐이고, 실제 로직은 <b>Local Types 탭의 로컬 클래스</b>에 삽니다.</p>
+
+<h3>② 소스 전문 — 글로벌 클래스 (전체가 이게 끝)</h3>
+<pre><code>CLASS ycl_bp_r_flight DEFINITION
+  PUBLIC
+  ABSTRACT
+  FINAL
+  FOR BEHAVIOR OF yr_flight.
+ENDCLASS.
+
+CLASS ycl_bp_r_flight IMPLEMENTATION.
+ENDCLASS.</code></pre>
+<p><code>FOR BEHAVIOR OF</code>가 이 클래스를 특별하게 만듭니다: 직접 인스턴스화 불가(ABSTRACT), 상속 불가(FINAL), 오직 RAP 런타임만 로컬 핸들러를 호출합니다.</p>
+
+<h3>② 소스 — lhc_flight 정의부 + validateCarrier (대표 해부)</h3>
+<pre><code>CLASS lhc_flight DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+    CONSTANTS:
+      mc_area_carrier    TYPE string VALUE 'VALIDATE_CARRIER',
+      mc_area_connection TYPE string VALUE 'VALIDATE_CONNECTION',
+      mc_area_planetype  TYPE string VALUE 'VALIDATE_PLANETYPE',
+      mc_area_seats      TYPE string VALUE 'VALIDATE_SEATS'.
+
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR Flight RESULT result.
+
+    METHODS validatecarrier FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateCarrier.
+    METHODS validateconnection FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateConnection.
+    METHODS validateplanetype FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validatePlaneType.
+    METHODS validateseats FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateSeats.
+ENDCLASS.</code></pre>
+<pre><code>  METHOD validatecarrier.
+    READ ENTITIES OF yr_flight IN LOCAL MODE
+      ENTITY Flight
+        FIELDS ( CarrierId ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_flight).
+
+    DATA lt_carrier TYPE SORTED TABLE OF s_carr_id WITH UNIQUE KEY table_line.
+    IF lt_flight IS NOT INITIAL.
+      SELECT DISTINCT carrid FROM scarr
+        FOR ALL ENTRIES IN @lt_flight
+        WHERE carrid = @lt_flight-CarrierId
+        INTO TABLE @lt_carrier.
+    ENDIF.
+
+    LOOP AT lt_flight INTO DATA(ls_flight).
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_carrier ) TO reported-flight.
+
+      IF line_exists( lt_carrier[ table_line = ls_flight-CarrierId ] ).
+        CONTINUE.
+      ENDIF.
+      APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_carrier
+                      %msg        = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-error
+                          text     = |Airline '{ ls_flight-CarrierId }' does not exist.| )
+                      %element-carrierid = if_abap_behv=>mk-on ) TO reported-flight.
+    ENDLOOP.
+  ENDMETHOD.</code></pre>
+
+<h3>③ 해설 — RAP 핸들러의 관용구 5가지</h3>
+<ol>
+  <li><b><code>FOR VALIDATE ON SAVE ... IMPORTING keys FOR Flight~validateCarrier</code></b> — 메서드 시그니처가 BDEF 선언과 이름으로 연결됩니다. <code>keys</code>는 "검증 대상 인스턴스들의 키 목록" — <b>항상 대량(테이블) 처리</b>가 기본입니다. 한 건씩 호출되지 않습니다.</li>
+  <li><b><code>READ ENTITIES ... IN LOCAL MODE</code></b> — 검증할 값은 파라미터로 오지 않습니다. 키만 받고, 현재 값(트랜잭션 버퍼+draft 포함)은 EML로 직접 읽습니다. <code>IN LOCAL MODE</code>는 "BO 내부 접근이니 권한·feature control 생략" 표시입니다.</li>
+  <li><b><code>%tky</code></b> — transactional key. 키 + draft 여부(%is_draft)를 묶은 구조로, 프레임워크와 대화할 때의 인스턴스 신분증입니다.</li>
+  <li><b><code>failed</code> / <code>reported</code></b> — 반환값 대신 쓰는 암묵 파라미터. <code>failed-flight</code>에 넣으면 "이 인스턴스 저장 거부", <code>reported-flight</code>의 <code>%msg</code>가 화면 메시지, <code>%element-carrierid</code>는 "이 필드에 빨간 표시" 지정입니다. 클래식의 <code>MESSAGE E000 ... FIELD carrid</code>에 해당.</li>
+  <li><b><code>%state_area</code></b> — 메시지 수명 관리 구역. 검증 시작 시 자기 구역을 빈 값으로 APPEND(=이전 메시지 지우기)하고, 오류 시 같은 구역으로 메시지를 넣습니다. draft 재검증 때 낡은 메시지가 화면에 쌓이는 것을 막는 표준 관용구입니다.</li>
+</ol>
+<p>나머지 3개 validation(connection 존재, 기종 존재, 좌석수 합리성 3중 체크)과 빈 권한 구현까지 — 전문:</p>
+<details><summary>lhc_flight 전체 소스 (실물 164줄)</summary>
+<pre><code>CLASS lhc_flight DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+    CONSTANTS:
+      mc_area_carrier    TYPE string VALUE 'VALIDATE_CARRIER',
+      mc_area_connection TYPE string VALUE 'VALIDATE_CONNECTION',
+      mc_area_planetype  TYPE string VALUE 'VALIDATE_PLANETYPE',
+      mc_area_seats      TYPE string VALUE 'VALIDATE_SEATS'.
+
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR Flight RESULT result.
+
+    METHODS validatecarrier FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateCarrier.
+    METHODS validateconnection FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateConnection.
+    METHODS validateplanetype FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validatePlaneType.
+    METHODS validateseats FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateSeats.
+ENDCLASS.
+
+
+CLASS lhc_flight IMPLEMENTATION.
+
+  METHOD get_global_authorizations.
+  ENDMETHOD.
+
+  METHOD validatecarrier.
+    READ ENTITIES OF yr_flight IN LOCAL MODE
+      ENTITY Flight
+        FIELDS ( CarrierId ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_flight).
+
+    DATA lt_carrier TYPE SORTED TABLE OF s_carr_id WITH UNIQUE KEY table_line.
+    IF lt_flight IS NOT INITIAL.
+      SELECT DISTINCT carrid FROM scarr
+        FOR ALL ENTRIES IN @lt_flight
+        WHERE carrid = @lt_flight-CarrierId
+        INTO TABLE @lt_carrier.
+    ENDIF.
+
+    LOOP AT lt_flight INTO DATA(ls_flight).
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_carrier ) TO reported-flight.
+
+      IF line_exists( lt_carrier[ table_line = ls_flight-CarrierId ] ).
+        CONTINUE.
+      ENDIF.
+      APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_carrier
+                      %msg        = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-error
+                          text     = |Airline '{ ls_flight-CarrierId }' does not exist.| )
+                      %element-carrierid = if_abap_behv=>mk-on ) TO reported-flight.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD validateconnection.
+    READ ENTITIES OF yr_flight IN LOCAL MODE
+      ENTITY Flight
+        FIELDS ( CarrierId ConnectionId ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_flight).
+
+    TYPES: BEGIN OF lty_conn,
+             carrid TYPE s_carr_id,
+             connid TYPE s_conn_id,
+           END OF lty_conn.
+    DATA lt_conn TYPE SORTED TABLE OF lty_conn WITH UNIQUE KEY carrid connid.
+    IF lt_flight IS NOT INITIAL.
+      SELECT DISTINCT carrid, connid FROM spfli
+        FOR ALL ENTRIES IN @lt_flight
+        WHERE carrid = @lt_flight-CarrierId
+          AND connid = @lt_flight-ConnectionId
+        INTO TABLE @lt_conn.
+    ENDIF.
+
+    LOOP AT lt_flight INTO DATA(ls_flight).
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_connection ) TO reported-flight.
+
+      IF line_exists( lt_conn[ carrid = ls_flight-CarrierId
+                               connid = ls_flight-ConnectionId ] ).
+        CONTINUE.
+      ENDIF.
+      APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_connection
+                      %msg        = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-error
+                          text     = |Connection '{ ls_flight-CarrierId } { ls_flight-ConnectionId }' does not exist in the flight schedule.| )
+                      %element-connectionid = if_abap_behv=>mk-on ) TO reported-flight.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD validateplanetype.
+    READ ENTITIES OF yr_flight IN LOCAL MODE
+      ENTITY Flight
+        FIELDS ( PlaneType ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_flight).
+
+    DATA lt_plane TYPE SORTED TABLE OF s_planetye WITH UNIQUE KEY table_line.
+    IF lt_flight IS NOT INITIAL.
+      SELECT DISTINCT planetype FROM saplane
+        FOR ALL ENTRIES IN @lt_flight
+        WHERE planetype = @lt_flight-PlaneType
+        INTO TABLE @lt_plane.
+    ENDIF.
+
+    LOOP AT lt_flight INTO DATA(ls_flight).
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_planetype ) TO reported-flight.
+
+      IF ls_flight-PlaneType IS INITIAL
+        OR line_exists( lt_plane[ table_line = ls_flight-PlaneType ] ).
+        CONTINUE.
+      ENDIF.
+      APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_planetype
+                      %msg        = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-error
+                          text     = |Plane type '{ ls_flight-PlaneType }' does not exist.| )
+                      %element-planetype = if_abap_behv=>mk-on ) TO reported-flight.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD validateseats.
+    READ ENTITIES OF yr_flight IN LOCAL MODE
+      ENTITY Flight
+        FIELDS ( MaximumSeats OccupiedSeats
+                 MaximumSeatsBusiness OccupiedSeatsBusiness
+                 MaximumSeatsFirst OccupiedSeatsFirst )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_flight).
+
+    LOOP AT lt_flight INTO DATA(ls_flight).
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = mc_area_seats ) TO reported-flight.
+
+      IF ls_flight-OccupiedSeats > ls_flight-MaximumSeats.
+        APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+        APPEND VALUE #( %tky        = ls_flight-%tky
+                        %state_area = mc_area_seats
+                        %msg        = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text     = |Occupied seats ({ ls_flight-OccupiedSeats }) exceed maximum seats ({ ls_flight-MaximumSeats }).| )
+                        %element-occupiedseats = if_abap_behv=>mk-on ) TO reported-flight.
+      ENDIF.
+
+      IF ls_flight-OccupiedSeatsBusiness > ls_flight-MaximumSeatsBusiness.
+        APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+        APPEND VALUE #( %tky        = ls_flight-%tky
+                        %state_area = mc_area_seats
+                        %msg        = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text     = |Business class: occupied seats ({ ls_flight-OccupiedSeatsBusiness }) exceed maximum ({ ls_flight-MaximumSeatsBusiness }).| )
+                        %element-occupiedseatsbusiness = if_abap_behv=>mk-on ) TO reported-flight.
+      ENDIF.
+
+      IF ls_flight-OccupiedSeatsFirst > ls_flight-MaximumSeatsFirst.
+        APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+        APPEND VALUE #( %tky        = ls_flight-%tky
+                        %state_area = mc_area_seats
+                        %msg        = new_message_with_text(
+                            severity = if_abap_behv_message=>severity-error
+                            text     = |First class: occupied seats ({ ls_flight-OccupiedSeatsFirst }) exceed maximum ({ ls_flight-MaximumSeatsFirst }).| )
+                        %element-occupiedseatsfirst = if_abap_behv=>mk-on ) TO reported-flight.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.</code></pre>
+</details>
+
+<div class="classic"><b>클래식이라면</b> — PAI의 <code>CHAIN ... FIELD carrid MODULE check_carrid</code>. 차이: PAI 체크는 화면 한 건 기준·즉시 중단이지만, RAP validation은 <b>대량 키 집합 기준·전부 검증 후 실패 목록 반환</b>입니다. 메시지도 즉시 출력이 아니라 구조체에 담아 반환하면 UI가 알아서 표시합니다.</div>
+
+<h3>⑤ 확인 방법 / ⑥ 함정</h3>
+<p>클래스 활성화 후 BDEF의 경고가 사라졌는지 확인. 검증 동작은 Step 7의 화면에서, 또는 §3의 EML로 확인합니다.</p>
+<div class="warn"><b>함정(운영 지식)</b> — 활성화 순서는 <b>BDEF 먼저, 클래스 나중</b>입니다. 서로 참조하므로 클래스만 먼저 활성화하려 하면 실패할 수 있습니다. ADT에서 여럿 선택해 일괄 활성화(Ctrl+Shift+F3)하는 것이 안전합니다.</div>
+
+<!-- ================= Step 5 ================= -->
+<h2 class="sec" id="step5">Step 5. Projection — YC_FLIGHT + @UI 어노테이션 <span class="badge b-basic">기초</span><span class="badge b-adv">심화</span></h2>
+
+<h3>① 이 단계에서 만드는 것</h3>
+<p>BO를 <b>UI 용도로 선별·꾸미는</b> 계층. Interface(YR_)는 재사용 자산으로 순수하게 두고, 화면 사정(@UI, F4, 표시 필드 선택)은 전부 Projection(YC_)에 둡니다. 같은 BO에 API용 프로젝션을 따로 얹을 수도 있습니다 — 이것이 프로젝션 계층의 존재 이유입니다.</p>
+
+<h3>② 소스 전문 — YC_FLIGHT (projection view)</h3>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Flight Projection (RAP GRID)'
+@Metadata.allowExtensions: true
+@Search.searchable: true
+@UI: { headerInfo: { typeName: 'Flight', typeNamePlural: 'Flights',
+                     title: { type: #STANDARD, value: 'CarrierId' },
+                     description: { type: #STANDARD, value: 'FlightDate' } } }
+define root view entity YC_FLIGHT
+  provider contract transactional_query
+  as projection on YR_FLIGHT
+{
+      @UI.facet: [ { id: 'idFlight', purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE,
+                     label: 'Flight Details', position: 10 } ]
+      @Search.defaultSearchElement: true
+      @ObjectModel.text.element: ['CarrierName']
+      @Consumption.valueHelpDefinition: [{ entity: { name: 'YI_CARRIER_VH', element: 'CarrierId' } }]
+      @UI: { lineItem: [{ position: 10 }], identification: [{ position: 10 }], selectionField: [{ position: 10 }] }
+  key CarrierId,
+      @Consumption.valueHelpDefinition: [{ entity: { name: 'YI_CONNECTION_VH', element: 'ConnectionId' },
+                                           additionalBinding: [{ localElement: 'CarrierId', element: 'CarrierId' }] }]
+      @UI: { lineItem: [{ position: 20 }], identification: [{ position: 20 }], selectionField: [{ position: 20 }] }
+  key ConnectionId,
+      @UI: { lineItem: [{ position: 30 }], identification: [{ position: 30 }], selectionField: [{ position: 30 }] }
+  key FlightDate,
+      @UI.hidden: true
+      _Carrier.carrname    as CarrierName,
+      @UI: { lineItem: [{ position: 40 }], identification: [{ position: 40 }] }
+      _Connection.cityfrom as CityFrom,
+      @UI: { lineItem: [{ position: 50 }], identification: [{ position: 50 }] }
+      _Connection.cityto   as CityTo,
+      @UI: { lineItem: [{ position: 60 }], identification: [{ position: 60 }] }
+      Price,
+      @Consumption.valueHelpDefinition: [{ entity: { name: 'I_Currency', element: 'Currency' } }]
+      @UI: { identification: [{ position: 70 }] }
+      CurrencyCode,
+      @Consumption.valueHelpDefinition: [{ entity: { name: 'YI_PLANETYPE_VH', element: 'PlaneType' } }]
+      @UI: { lineItem: [{ position: 80 }], identification: [{ position: 80 }] }
+      PlaneType,
+      @UI: { lineItem: [{ position: 90 }], identification: [{ position: 90 }] }
+      MaximumSeats,
+      @UI: { lineItem: [{ position: 100 }], identification: [{ position: 100 }] }
+      OccupiedSeats,
+      @UI: { lineItem: [{ position: 110 }], identification: [{ position: 110 }] }
+      OccupancyRate,
+      @UI: { lineItem: [{ position: 120 }], identification: [{ position: 120 }] }
+      PaymentsSum,
+      @UI: { identification: [{ position: 130 }] }
+      MaximumSeatsBusiness,
+      @UI: { identification: [{ position: 140 }] }
+      OccupiedSeatsBusiness,
+      @UI: { identification: [{ position: 150 }] }
+      MaximumSeatsFirst,
+      @UI: { identification: [{ position: 160 }] }
+      OccupiedSeatsFirst,
+      LastChangedAt,
+      LocalLastChangedAt,
+      _Carrier,
+      _Connection,
+      _Plane,
+      _Currency
+}</code></pre>
+
+<h3>③ 해설 — @UI 어노테이션이 화면을 결정한다</h3>
+<table>
+<tr><th>어노테이션</th><th>화면에서의 의미</th><th>클래식 대응물</th></tr>
+<tr><td><code>provider contract transactional_query</code></td><td>"이 뷰는 트랜잭션 UI 서비스의 소비 뷰"라는 계약 선언 — projection 필수 요소</td><td>—</td></tr>
+<tr><td><code>@UI.headerInfo</code></td><td>Object Page 상단 제목/설명, 목록의 개체 이름</td><td>화면 타이틀(GUI Status)</td></tr>
+<tr><td><code>@UI.lineItem position</code></td><td>List Report 표의 컬럼과 순서</td><td>ALV 필드카탈로그의 col_pos</td></tr>
+<tr><td><code>@UI.selectionField</code></td><td>상단 필터바 필드</td><td>SELECT-OPTIONS</td></tr>
+<tr><td><code>@UI.identification</code></td><td>Object Page 상세 폼의 필드와 순서</td><td>화면 레이아웃</td></tr>
+<tr><td><code>@UI.facet</code></td><td>Object Page의 구역(섹션) 정의 — identification 그룹을 담는 틀</td><td>서브스크린/탭</td></tr>
+<tr><td><code>@UI.hidden</code></td><td>화면에 안 보이지만 데이터로는 존재 (CarrierName은 text로만 사용)</td><td>NO-DISPLAY</td></tr>
+<tr><td><code>@ObjectModel.text.element</code></td><td>코드 옆에 텍스트 표시 ("AA (American Airlines)")</td><td>도메인 텍스트 수동 조인</td></tr>
+<tr><td><code>@Consumption.valueHelpDefinition</code></td><td>F4 — <code>additionalBinding</code>은 "항공사를 먼저 고르면 그 항공사의 노선만" 연동 조건</td><td>매치코드 + 검색도움말 연계</td></tr>
+<tr><td><code>@Search.defaultSearchElement</code></td><td>상단 통합 검색창의 검색 대상</td><td>—</td></tr>
+</table>
+
+<h3>② 소스 전문 — projection BDEF (YC_FLIGHT)</h3>
+<pre><code>projection;
+strict;
+use draft;
+
+define behavior for YC_FLIGHT alias Flight
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+}</code></pre>
+<p><code>use</code> = "기반 BO의 이 행동을 이 화면에 노출한다". 읽기 전용 화면을 만들고 싶으면 <code>use update/delete</code>를 빼면 됩니다 — 기반 BO는 그대로 두고 소비 측에서만 좁히는 것. 이것이 프로젝션의 힘입니다.</p>
+
+<div class="warn"><b>함정(실측 겸 주의)</b> — <code>@UI.facet</code>은 이 실물처럼 <b>인라인으로도 동작</b>하지만(756 실측), SAP 권장은 @UI 전체를 <b>Metadata Extension(DDLX)</b>으로 분리하는 것입니다(<code>@Metadata.allowExtensions: true</code>가 그 준비). 과거 이 시스템에서 다른 CDS 뷰에 facet을 인라인으로 넣다 활성화 오류를 겪은 사례가 있으니, <b>facet이 인라인에서 오류를 내면 DDLX로 분리</b>하세요. 뷰 소스도 짧아지고 UI 변경이 데이터 모델 전송과 분리되는 장점도 있습니다.</div>
+
+<h3>⑤ 확인 방법</h3>
+<p>YC_FLIGHT 활성화 후 F8 — projection을 통한 조회 확인. @UI의 효과는 Step 7에서 화면으로 확인합니다.</p>
+
+<!-- ================= Step 6 ================= -->
+<h2 class="sec" id="step6">Step 6. Service Definition / Binding <span class="badge b-basic">기초</span></h2>
+
+<h3>① 이 단계에서 만드는 것</h3>
+<p>노출 목록(SRVD)과 프로토콜 바인딩(SRVB). 여기까지 하면 OData 서비스가 <b>자동 생성</b>됩니다 — SEGW도, *_GET_ENTITYSET 구현도 없습니다.</p>
+
+<h3>② 소스 전문 — SRVD YUI_FLIGHT_O4</h3>
+<pre><code>@EndUserText.label: 'Flight UI Service (RAP GRID)'
+define service YUI_FLIGHT_O4 {
+  expose YC_FLIGHT as Flight;
+  expose YI_CARRIER_VH as Carrier;
+  expose YI_CONNECTION_VH as Connection;
+  expose YI_PLANETYPE_VH as PlaneType;
+  expose I_Currency as Currency;
+}</code></pre>
+<p>Value Help 뷰들도 <b>함께 노출해야</b> F4가 동작합니다 — F4 데이터도 결국 브라우저가 OData로 읽기 때문입니다. <code>as</code> 별칭이 OData 엔티티셋 이름이 됩니다.</p>
+
+<h3>③ SRVB — ADT 폼 기반 오브젝트</h3>
+<p>SRVB는 소스가 아니라 폼으로 편집합니다. 실물 설정(DB 실측): <b>OData V4 / UI 용도 / 활성 / 서비스정의 YUI_FLIGHT_O4</b>. 선택 기준:</p>
+<table>
+<tr><th></th><th>OData V2</th><th>OData V4</th></tr>
+<tr><td>포지션</td><td>레거시 호환 (기존 V2 소비처, 옛 FE 템플릿)</td><td><b>현행 표준</b> — 신규는 V4</td></tr>
+<tr><td>RAP 기능</td><td>draft 등 일부 제약</td><td>draft·side effect 등 전제 프로토콜</td></tr>
+<tr><td>게시(이 시스템)</td><td>ADT에서 바로 Publish 가능</td><td>ADT Publish 실패 — 아래 함정 참조</td></tr>
+</table>
+<div class="warn"><b>함정(실측)</b> — 이 시스템에서 <b>V4 SRVB의 Publish가 ADT에서 실패</b>합니다(오류 <code>/IWFND/CM_DESIGNTIME 174</code> "Transport request not available..."). 원인: 클라이언트 100이 변경 자동기록(auto-record) 설정이라 게시 시 커스터마이징 요청 선택 팝업이 필요한데, ADT(HTTP) 컨텍스트에선 팝업을 못 띄웁니다. <b>해법: SAP GUI에서 <code>/IWFND/V4_ADMIN</code> 트랜잭션으로 게시</b> — 팝업이 떠서 요청을 고를 수 있습니다. 또 하나: <b>바인딩 버전(V2/V4)은 생성 후 변경 불가</b>입니다. 잘못 만들면 삭제 후 재생성해야 하니 생성 시점에 확실히 고르세요.</div>
+
+<h3>⑤ 확인 방법</h3>
+<p>SRVB 화면에서 서비스 상태가 Published인지, 엔티티 목록에 Flight/Carrier 등 5개가 보이는지 확인. 서비스 URL의 <code>$metadata</code>를 브라우저로 열면 OData 스키마(XML)가 나옵니다 — 이것이 "자동 생성된 API"의 실체입니다.</p>
+
+<!-- ================= Step 7 ================= -->
+<h2 class="sec" id="step7">Step 7. Fiori Elements 프리뷰 <span class="badge b-basic">기초</span></h2>
+
+<h3>① 이 단계에서 하는 것</h3>
+<p>코딩 없이 화면 확인. SRVB에서 엔티티(Flight) 선택 → <b>Preview</b> — 브라우저에 List Report가 뜹니다.</p>
+
+<h3>③ 확인 시나리오 (화면 흐름)</h3>
+<ol>
+  <li><b>List Report</b>: 필터바에 CarrierId/ConnectionId/FlightDate(= <code>@UI.selectionField</code>), Go를 누르면 표(컬럼 = <code>@UI.lineItem</code> 순서). CarrierId에서 F4 → 항공사 목록(YI_CARRIER_VH). 항공사를 고른 뒤 ConnectionId F4 → <b>그 항공사의 노선만</b> 나오는지(additionalBinding 효과) 확인.</li>
+  <li><b>Object Page</b>: 행 클릭 → 상세 화면. 상단 제목이 CarrierId/FlightDate(= headerInfo), "Flight Details" 구역(= facet)에 identification 필드들.</li>
+  <li><b>Edit와 draft</b>: Edit 클릭 → 편집 모드. 키 3종이 잠겨 있고(<code>readonly : update</code>) 다른 필드는 입력 가능. 값을 바꾸고 <b>저장하지 않은 채</b> 브라우저 탭을 닫았다가 다시 열면 — "편집 중이던 draft가 있다"며 이어하기(Resume)를 제안합니다. 이것이 draft의 체감입니다.</li>
+  <li><b>validation 체감</b>: OccupiedSeats에 MaximumSeats보다 큰 값 입력 후 저장 → 저장이 거부되고 해당 필드에 "Occupied seats (…) exceed maximum seats (…)" 오류가 필드 단위로 표시됩니다(= <code>%element-occupiedseats</code>의 효과).</li>
+  <li><b>Create</b>: 신규 생성 화면에서 키 3종에 필수(*) 표시(<code>mandatory : create</code>), 존재하지 않는 항공사 코드 입력 시 validateCarrier 오류.</li>
+</ol>
+<div class="note"><b>여기서 멈추고 음미할 것</b> — 우리는 UI5 코드를 한 줄도 안 썼습니다. 화면의 모든 요소가 Step 3(BDEF)와 Step 5(@UI)의 <b>선언</b>에서 나왔습니다. 화면을 바꾸고 싶으면 코드가 아니라 선언을 바꿉니다.</div>
+
+<!-- ================= §3 EML ================= -->
+<h2 class="sec" id="eml-lab">§3 EML 실습 — 라이브 실측 <span class="badge b-adv">심화</span></h2>
+<p>개념은 <a class="exlink" href="08_rap_concept.html#eml">08 7부 ▸</a>. 여기선 이 시스템에서 <b>실제로 실행하고 출력을 캡처</b>한 코드입니다(2026-07-20). 점유율 있는 항공편 2건을 BO를 통해 읽습니다:</p>
+<pre><code>DATA lv_msg TYPE string.
+SELECT carrid, connid, fldate FROM ysflight
+  WHERE seatsocc > 0
+  ORDER BY carrid, connid, fldate
+  INTO TABLE @DATA(lt_keys)
+  UP TO 2 ROWS.
+READ ENTITIES OF yr_flight
+  ENTITY Flight
+  ALL FIELDS WITH VALUE #(
+    FOR ls_k IN lt_keys
+    ( CarrierId = ls_k-carrid
+      ConnectionId = ls_k-connid
+      FlightDate = ls_k-fldate ) )
+  RESULT DATA(lt_result)
+  FAILED DATA(ls_failed).
+lv_msg = |read={ lines( lt_result ) }|.
+LOOP AT lt_result INTO DATA(ls_r).
+  lv_msg = lv_msg &&
+    | \| { ls_r-CarrierId }/{ ls_r-ConnectionId }/{ ls_r-FlightDate }| &
+    | occ={ ls_r-OccupancyRate }%| &
+    | seats={ ls_r-OccupiedSeats }/{ ls_r-MaximumSeats }| &
+    | price={ ls_r-Price } { ls_r-CurrencyCode }|.
+ENDLOOP.</code></pre>
+<p><b>실제 출력(원문)</b>:</p>
+<div class="result">read=2 | AA/0017/20230622 occ=96.6% seats=372/385 price=423.44 USD | AA/0017/20230624 occ=95.5% seats=315/330 price=423.44 USD</div>
+<p>읽는 법:</p>
+<ul>
+  <li>키를 <code>carrid</code>로 SELECT했지만 EML에는 <code>CarrierId</code>로 넣습니다 — BO 세계의 이름은 CDS 별칭(<a class="exlink" href="09_rap_practice_guide.html#step2">Step 2</a>).</li>
+  <li><b>OccupancyRate가 결과에 실려 있습니다</b>(372/385=96.6% — 검산 일치). <code>SELECT * FROM ysflight</code>에는 이 필드가 없습니다. BO를 통해 읽었기에 계산필드가 함께 옵니다.</li>
+  <li>같은 코드를 데이터 없는 키로 돌리면 <code>read=0</code>일 뿐 오류가 아닙니다(첫 실측: <code>keys=3 read=3 failed=0 ... occ=0.0% seats=0/128</code> — 좌석 0인 행은 점유율 0.0%로 계산됨).</li>
+</ul>
+<div class="note"><b>실행 환경 노트</b> — 이 실측은 콘솔 러너 환경에서 수행했습니다. ADT가 있다면 같은 코드를 <code>if_oo_adt_classrun</code> 클래스의 <code>main</code>에 넣고 <code>out-&gt;write( lv_msg )</code>로 F9 실행하는 것이 표준입니다. 쓰기(MODIFY+COMMIT ENTITIES)까지 실습하려면 §4 심화 과제를 마친 뒤 테스트 데이터로 시도해 보세요 — validation이 지켜주니 안심하고 실험해도 됩니다.</div>
+
+<!-- ================= §4 ================= -->
+<h2 class="sec" id="assignments">§4 미니 과제 <span class="badge b-basic">기초</span><span class="badge b-adv">심화</span></h2>
+
+<h3>과제 1 <span class="badge b-basic">기초</span> — 표시 필드 추가</h3>
+<p>List Report 표에 <b>도착 공항(SPFLI-AIRPTO)</b> 컬럼을 추가하세요. 수정할 오브젝트가 무엇무엇인지 먼저 생각해 보세요.</p>
+<details><summary>정답 보기</summary>
+<ol>
+  <li><b>YR_FLIGHT</b> (interface view): 필드 추가 — <code>_Connection.airpto as AirportTo,</code> (association은 이미 있음)</li>
+  <li><b>YC_FLIGHT</b> (projection view): 노출 + 컬럼 지정 —
+<pre><code>      @UI: { lineItem: [{ position: 55 }], identification: [{ position: 55 }] }
+      AirportTo,</code></pre></li>
+  <li>BDEF는? — <b>수정 불필요.</b> 읽기 전용 파생 표시 필드일 뿐입니다. (편집 가능 필드로 만들려는 게 아니므로 field 제어도 불필요 — 애초에 projection 경유 표시라 입력 대상이 아님)</li>
+  <li>활성화 순서: YR_FLIGHT → YC_FLIGHT. 프리뷰 새로고침으로 컬럼 확인.</li>
+</ol>
+</details>
+
+<h3>과제 2 <span class="badge b-adv">심화</span> — validation 추가</h3>
+<p>"항공편 일자(FlightDate)는 과거 날짜일 수 없다(생성 시)" 검증을 추가하세요. BDEF 선언과 핸들러 구현 두 곳을 고쳐야 합니다.</p>
+<details><summary>정답 보기</summary>
+<p><b>① BDEF</b> — validation 선언 + Prepare 목록 추가:</p>
+<pre><code>  validation validateDate on save { create; field FlightDate; }
+  ...
+  draft determine action Prepare
+  {
+    validation validateCarrier;
+    validation validateConnection;
+    validation validatePlaneType;
+    validation validateSeats;
+    validation validateDate.        " ← 추가
+  }</code></pre>
+<p><b>② lhc_flight</b> — 정의부에 메서드 선언 추가:</p>
+<pre><code>    METHODS validatedate FOR VALIDATE ON SAVE
+      IMPORTING keys FOR Flight~validateDate.</code></pre>
+<p>구현부 (관용구는 Step 4의 5가지 그대로):</p>
+<pre><code>  METHOD validatedate.
+    READ ENTITIES OF yr_flight IN LOCAL MODE
+      ENTITY Flight
+        FIELDS ( FlightDate ) WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_flight).
+
+    LOOP AT lt_flight INTO DATA(ls_flight).
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = 'VALIDATE_DATE' ) TO reported-flight.
+
+      IF ls_flight-FlightDate >= cl_abap_context_info=>get_system_date( ).
+        CONTINUE.
+      ENDIF.
+      APPEND VALUE #( %tky = ls_flight-%tky ) TO failed-flight.
+      APPEND VALUE #( %tky        = ls_flight-%tky
+                      %state_area = 'VALIDATE_DATE'
+                      %msg        = new_message_with_text(
+                          severity = if_abap_behv_message=>severity-error
+                          text     = |Flight date { ls_flight-FlightDate DATE = USER } is in the past.| )
+                      %element-flightdate = if_abap_behv=>mk-on ) TO reported-flight.
+    ENDLOOP.
+  ENDMETHOD.</code></pre>
+<p>검증: 프리뷰에서 Create → 과거 날짜 입력 → 저장 시 FlightDate 필드에 오류가 떠야 합니다. (참고: <code>cl_abap_context_info=>get_system_date( )</code>는 ABAP Cloud 호환 날짜 조회 — <code>sy-datum</code>도 이 시스템에선 동작하지만 클라우드 이행을 생각하면 전자가 습관으로 좋습니다.)</p>
+</details>
+
+<footer>
+  RAP 교육자료 3부작 (2/3) — 이전: <a href="08_rap_concept.html">08 개념 가이드</a> · 다음: <a href="10_rap_pattern_catalog.html">10 패턴 카탈로그</a><br>
+  실물 오브젝트: 패키지 YCO_TEMP (S/4HANA 2021, client 100) · 소스 추출 및 EML 실측 2026-07-20<br>
+  템플릿 계보: 이 스택은 GUI GRID 템플릿(YCOT1020)의 RAP 대응판입니다 — <span class="pill">07_rap_grid_template.html</span> 참조
+</footer>
+</div>
+</body>
+</html>
