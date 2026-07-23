@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[원천추적] YCL_CO_CCA_TRACE_ABAP — CCA 배부 원천추적 순수 ABAP 엔진</title>
+<style>
+  :root{
+    --bg:#ffffff; --band:#f6f5f2; --ink:#1a1a1a; --sub:#6b6864;
+    --line:#e4e1da; --line-strong:#1a1a1a; --accent:#8a3324;
+    --dark:#161412; --dark-ink:#f3efe8; --dark-sub:#a49c8f;
+    --code-bg:#f2f0ec;
+  }
+  :root[data-theme="dark"]{
+    --bg:#131211; --band:#1b1917; --ink:#f2efe9; --sub:#a49c8f;
+    --line:#2c2925; --line-strong:#4a453e; --accent:#d98b5f;
+    --dark:#0d0c0b; --dark-ink:#f3efe8; --dark-sub:#a49c8f;
+    --code-bg:#201d1a;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#131211; --band:#1b1917; --ink:#f2efe9; --sub:#a49c8f;
+      --line:#2c2925; --line-strong:#4a453e; --accent:#d98b5f;
+      --dark:#0d0c0b; --dark-ink:#f3efe8; --dark-sub:#a49c8f;
+      --code-bg:#201d1a;
+    }
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; line-height:1.45; }
+  .serif{ font-family:Georgia,"Iowan Old Style","Times New Roman",serif; }
+  .wrap{ max-width:960px; margin:0 auto; padding:0 22px; }
+  section{ padding:clamp(44px,8vw,96px) 0; }
+  .eyebrow{ font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; }
+
+  @keyframes rise{ from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:none;} }
+  .rise{ animation:rise .9s cubic-bezier(.2,.7,.2,1) both; }
+  .rise.d1{animation-delay:.08s;} .rise.d2{animation-delay:.16s;}
+  @media (prefers-reduced-motion:reduce){ .rise{ animation:none; } }
+
+  .hero{ text-align:center; padding-top:clamp(60px,11vw,130px); }
+  .hero .eyebrow{ margin-bottom:18px; }
+  .hero h1{ font-size:clamp(44px,9vw,96px); font-weight:600; letter-spacing:-.02em;
+    line-height:1.02; text-wrap:balance; }
+  .hero h1 .thin{ display:block; font-style:italic; font-weight:400; color:var(--sub);
+    font-size:.55em; letter-spacing:-.01em; margin-top:.2em; }
+  .hero .links{ margin-top:30px; display:flex; gap:26px; justify-content:center; flex-wrap:wrap; }
+  .hero .links a{ color:var(--accent); text-decoration:none; font-size:clamp(15px,2vw,18px); font-weight:500; }
+  .hero .links a:hover{ text-decoration:underline; }
+  .hero .links a::after{ content:" ›"; }
+
+  .figure{ text-align:center; }
+  .figure .big{ font-size:clamp(64px,16vw,180px); font-weight:600; letter-spacing:-.03em;
+    line-height:.92; font-variant-numeric:tabular-nums; }
+  .figure .cap{ margin-top:18px; font-size:clamp(15px,2.2vw,20px); color:var(--sub); max-width:52ch; margin-inline:auto; }
+
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); text-align:center; }
+  .stats .s{ padding:6px clamp(10px,3vw,32px); }
+  .stats .s + .s{ border-left:1px solid var(--line); }
+  .stats .k{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--sub); margin-bottom:14px; }
+  .stats .v{ font-size:clamp(34px,6vw,58px); font-weight:600; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .stats .d{ font-size:12px; color:var(--sub); margin-top:10px; font-style:italic; }
+  @media (max-width:640px){ .stats{ grid-template-columns:1fr; gap:32px; }
+    .stats .s + .s{ border-left:none; border-top:1px solid var(--line); padding-top:32px; } }
+
+  .band{ background:var(--band); border-radius:26px; }
+  .band-inner{ max-width:840px; margin:0 auto; padding:clamp(36px,6vw,72px) clamp(20px,4vw,48px); }
+  .band .eyebrow{ display:block; text-align:center; margin-bottom:14px; }
+  .band h2{ text-align:center; font-size:clamp(28px,5vw,48px); font-weight:600; letter-spacing:-.02em;
+    margin-bottom:8px; text-wrap:balance; }
+  .band .sub{ text-align:center; color:var(--sub); font-size:clamp(14px,2vw,18px); font-style:italic;
+    margin-bottom:clamp(26px,4vw,44px); }
+  .tablewrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{ font-size:10.5px; text-transform:uppercase; letter-spacing:.13em; color:var(--sub);
+    font-weight:600; text-align:left; padding:0 8px 12px; border-bottom:1px solid var(--line-strong); white-space:nowrap; }
+  thead th.num{ text-align:right; }
+  tbody td{ padding:13px 8px; border-bottom:1px solid var(--line); font-size:clamp(13.5px,1.8vw,16px); vertical-align:top; }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.num{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  td.amt{ font-weight:600; }
+  td.mono{ font-family:ui-monospace,"Cascadia Code",Consolas,monospace; font-size:.92em; color:var(--sub); white-space:nowrap; }
+  td.key{ font-family:ui-monospace,"Cascadia Code",Consolas,monospace; font-size:.92em; font-weight:600; white-space:nowrap; }
+  td.desc{ font-weight:500; }
+  .ok{ color:var(--accent); font-weight:600; }
+
+  .prose{ max-width:70ch; margin:0 auto; font-size:clamp(15px,2vw,17.5px); line-height:1.7; }
+  .prose p + p{ margin-top:1em; }
+  .prose strong{ font-weight:650; }
+  .prose .lede{ font-size:1.12em; }
+  .prose code, li code, td code{ font-family:ui-monospace,"Cascadia Code",Consolas,monospace;
+    font-size:.9em; background:var(--code-bg); padding:1px 6px; border-radius:6px; }
+
+  pre{ background:var(--code-bg); border:1px solid var(--line); border-radius:14px;
+    padding:18px 20px; overflow-x:auto; font-size:13.5px; line-height:1.55;
+    font-family:ui-monospace,"Cascadia Code",Consolas,monospace; }
+  pre .c{ color:var(--sub); font-style:italic; }
+  pre .k{ color:var(--accent); font-weight:600; }
+
+  /* pipeline flow */
+  .flow{ display:grid; grid-template-columns:1fr; gap:0; max-width:640px; margin:0 auto; }
+  .flow .step{ border:1px solid var(--line); border-radius:16px; padding:20px 24px; background:var(--bg); }
+  .flow .arrow{ text-align:center; color:var(--sub); font-size:22px; padding:6px 0; }
+  .flow .n{ font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent);
+    font-weight:600; margin-bottom:6px; }
+  .flow .t{ font-weight:650; font-size:16.5px; margin-bottom:4px; }
+  .flow .d{ color:var(--sub); font-size:14px; line-height:1.55; }
+  .flow .d code{ font-size:.92em; }
+
+  .rulecards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:720px){ .rulecards{ grid-template-columns:1fr; } }
+  .rule{ border:1px solid var(--line); border-radius:16px; padding:20px; }
+  .rule .badge{ font-family:Georgia,serif; font-size:34px; font-weight:600; color:var(--accent); line-height:1; }
+  .rule .name{ font-weight:650; margin:10px 0 6px; font-size:15.5px; }
+  .rule .txt{ color:var(--sub); font-size:13.5px; line-height:1.6; }
+
+  h3.subhead{ font-size:clamp(19px,3vw,24px); font-weight:650; letter-spacing:-.01em;
+    margin:clamp(34px,5vw,52px) 0 16px; }
+  h3.subhead:first-child{ margin-top:0; }
+
+  .note{ border-left:3px solid var(--accent); padding:10px 18px; color:var(--sub);
+    font-size:14.5px; line-height:1.65; margin:18px 0; }
+  .note strong{ color:var(--ink); }
+
+  .closer{ background:var(--dark); color:var(--dark-ink); text-align:center; border-radius:26px; }
+  .closer .eyebrow{ color:var(--accent); }
+  .closer .k{ display:block; margin-bottom:18px; }
+  .closer .v{ font-size:clamp(54px,12vw,130px); font-weight:600; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums; }
+  .closer .note2{ margin-top:22px; color:var(--dark-sub); font-size:15px; max-width:52ch; margin-inline:auto; line-height:1.6; font-style:italic; }
+
+  .pagefoot{ text-align:center; color:var(--sub); font-size:13px; padding:38px 22px 60px; line-height:1.6; max-width:62ch; margin:0 auto; }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow rise">SAP CO · CCA Allocation Origin Trace</p>
+    <h1 class="serif rise d1">원천추적.<span class="thin">배부의 끝에서, 시작을 읽는다.</span></h1>
+    <div class="links rise d2">
+      <a href="#stack">스택 구성</a>
+      <a href="#pipeline">엔진 파이프라인</a>
+      <a href="#algo">전파 알고리즘</a>
+      <a href="#verify">실측 검증</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap figure rise">
+    <div class="big serif">0.00</div>
+    <div class="cap">모든 검증 데이터셋에서의 in − out 잔차.
+      질량보존은 검사 항목이 아니라 <em>설계로 보장되는 불변식</em>이다.</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap stats">
+    <div class="s"><div class="k">Engine</div><div class="v serif">1</div><div class="d">순수 ABAP 단일 엔진 (AMDP 제거, 2026-07-23)</div></div>
+    <div class="s"><div class="k">Objects</div><div class="v serif">3</div><div class="d">엔진 · 리포트 헬퍼 · 실행 리포트</div></div>
+    <div class="s"><div class="k">검증 데이터셋</div><div class="v serif">4</div><div class="d">실적 2 · 계획 1 · 아웃플로우 1 — 전부 라이브</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ 개요 ══════════════ -->
+<section id="stack">
+  <div class="wrap">
+    <div class="band">
+      <div class="band-inner">
+        <span class="eyebrow">Why · What</span>
+        <h2 class="serif">무엇을 푸는 엔진인가</h2>
+        <p class="sub">최종 리시버가 받은 금액의 "출처 전수 분해"</p>
+        <div class="prose">
+          <p class="lede">코스트센터 배부(assessment · distribution · indirect activity allocation)가
+          여러 사이클을 거치고 나면, 최종 리시버에 쌓인 금액이 <strong>애초에 어느 오브젝트의
+          어느 원가요소에서 출발했는지</strong>는 표준 리포트로 알 수 없다. 이 엔진은 한 회계월의
+          배부 전기를 실행 순서대로 재생하여, 모든 최종 잔액을
+          <strong>(원천 오브젝트, 원천 원가요소) → (최종 오브젝트, 최종 원가요소)</strong> 단위로
+          분해한 전수 테이블을 만든다.</p>
+          <p>핵심 설계 결정 두 가지. 첫째, 사이클 마스터(T811C/S)는 사후 변경될 수 있으므로
+          <strong>참조하지 않는다</strong> — 실제 전기 이력인 T811D 실행 인덱스와 CO 명세서만 믿는다.
+          둘째, 프루닝으로 버린 잔량조차 <code>PRUNED</code> 행으로 방출하여
+          <strong>in = out 대사를 항상 성립</strong>시킨다.</p>
+        </div>
+
+        <h3 class="subhead">스택 구성</h3>
+        <div class="tablewrap">
+        <table>
+          <thead><tr><th>오브젝트</th><th>타입</th><th>역할</th></tr></thead>
+          <tbody>
+            <tr><td class="key">YCL_CO_CCA_TRACE_ABAP</td><td>CLAS</td><td class="desc">엔진 본체. 타입 정의의 원본이자 전체 로직 — 엣지 추출, 자기비용/아웃플로우 수집, 원천 전파. Open SQL + 내부테이블만 사용, DB 프로시저 없음.</td></tr>
+            <tr><td class="key">YCL_CO_CCA_TRACE_RPT</td><td>CLAS</td><td class="desc">리포트 헬퍼. OBJNR → 마스터 속성(회사코드·사업영역·텍스트) 파생(KS/OR/PR), BUKRS/GSBER 표시 필터.</td></tr>
+            <tr><td class="key">YCCA_TRACE_ORIGIN</td><td>PROG</td><td class="desc">실행 리포트. 선택화면(KOKRS·YYYYMM·실적/계획·필터 모드) + SALV 출력 + 헤드리스 테스트 모드(<code>p_noalv</code>).</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="note"><strong>AMDP 클래스는 폐기되었다.</strong> 초기에는 HANA SQLScript 병행 구현
+        (<code>YCL_CO_CCA_TRACE_AMDP</code>)이 존재했으나, 순수 ABAP 엔진이 동일 결과를 내는 것이
+        실측으로 확인되어 2026-07-23 타입 이전 후 삭제되었다. 현재 스택은 AMDP·HANA 의존이 전혀 없어
+        어떤 DB 위의 시스템에도 이식 가능하다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 데이터 소스 ══════════════ -->
+<section>
+  <div class="wrap">
+    <div class="band">
+      <div class="band-inner">
+        <span class="eyebrow">Data Sources</span>
+        <h2 class="serif">읽는 테이블</h2>
+        <p class="sub">전부 표준 테이블 — CBO 저장소 없이 매 실행 시 재계산</p>
+        <div class="tablewrap">
+        <table>
+          <thead><tr><th>테이블</th><th>용도</th><th>핵심 조건</th></tr></thead>
+          <tbody>
+            <tr><td class="key">T811D</td><td class="desc">사이클 실행 인덱스 — "실제로 전기된 run"의 앵커</td><td><code>TAB='CCSS'</code>, <code>NKRSUB=KOKRS</code>, <code>REVERSED=''</code> (역분개 run 제외). 조인키 DOCNR+GJAHR+PERIO</td></tr>
+            <tr><td class="key">COEP</td><td class="desc">실적 명세 — 배부 엣지(리시버 라인)와 자기비용</td><td><code>WRTTP='04'</code>, <code>VERSN='000'</code>. S/4에서는 리다이렉트로 실제 데이터는 호환 뷰가 공급</td></tr>
+            <tr><td class="key">COEJ</td><td class="desc">계획 명세 (연간 12기간 피벗) — 계획 엣지와 계획 자기비용</td><td><code>WRTTP='01'</code>, 버전 파라미터. WKG001~012에서 대상 기간 컬럼만 언피벗</td></tr>
+            <tr><td class="key">COBK</td><td class="desc">전표 헤더 — 실행시각과 역분개 플래그</td><td><code>CPUDT+CPUTM</code> → 실행순서(exec_seq), <code>STFLG=''</code> · <code>STOKZ=''</code> (역분개·역분개대상 전표 제외)</td></tr>
+            <tr><td class="key">CSKS · CSKT · AUFK · PRPS</td><td class="desc">리포트 표시용 마스터 속성 (헬퍼 클래스)</td><td>OBJNR 접두 <code>KS</code>(코스트센터) / <code>OR</code>(오더) / <code>PR</code>(WBS)별 분기, 키일자는 조회월 말일</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="note"><strong>역분개는 이중으로 걸러진다.</strong> run 레벨에서 T811D <code>REVERSED</code>,
+        전표 레벨에서 COBK <code>STFLG/STOKZ</code>. 어느 한쪽만으로는 IDES처럼 재전기가 뒤엉킨
+        데이터에서 유령 엣지가 살아남는다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 파이프라인 ══════════════ -->
+<section id="pipeline">
+  <div class="wrap">
+    <span class="eyebrow" style="display:block;text-align:center;margin-bottom:14px;">Pipeline</span>
+    <h2 class="serif" style="text-align:center;font-size:clamp(28px,5vw,48px);font-weight:600;letter-spacing:-.02em;margin-bottom:8px;">네 단계, 한 방향</h2>
+    <p style="text-align:center;color:var(--sub);font-style:italic;margin-bottom:clamp(30px,5vw,50px);">get_origin_trace가 오케스트레이션하는 흐름</p>
+    <div class="flow">
+      <div class="step">
+        <div class="n">Step 1 — Edge 추출</div>
+        <div class="t">get_actual_edges / get_plan_edges</div>
+        <div class="d">T811D 실행 인덱스와 COEP/COEJ 리시버 라인(<code>BEKNZ='S'</code>)을 조인해
+        배부 엣지 <code>sender(PAROB) → receiver(OBJNR)</code>를 만든다. 실적은
+        <code>RKIU·RKIV·RKIB</code>, 계획은 <code>RKPU·RKPV</code>만. COBK 시각으로
+        <code>exec_seq = CPUDT×10⁶ + CPUTM</code> 부여, VRGNG·PAROB로 규칙(A/B/U) 판정.</div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="step">
+        <div class="n">Step 2 — 자기비용 수집</div>
+        <div class="t">get_self_costs</div>
+        <div class="d">사이클 VRGNG를 <em>제외한</em> 모든 명세 라인이 각 오브젝트의 "자체 발생분".
+        VRGNG에 따라 <code>PRIMARY</code>(1차 전기)와 <code>EXTERNAL</code>(활동배분 RKL/RKLN,
+        간접비 KZPI, 정산 KOAO/KOAL, CO-PA KSPA/KSOS, KAMV)로 태깅.</div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="step">
+        <div class="n">Step 3 — 아웃플로우 의사 엣지</div>
+        <div class="t">get_self_costs (같은 스캔에서 분리)</div>
+        <div class="d">KSPA/KSOS/KOAO/KOAL의 <strong>음수(대변) 라인</strong>은 CO 밖으로 나가는 유출이다.
+        자기비용에서 빼는 대신 <code>#COPA</code>(KSPA/KSOS) · <code>#SETTLEMENT</code>(KOAO/KOAL)
+        가상 터미널로 향하는 rule B 엣지로 변환 — 유출액도 원천 분해 대상이 된다.</div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="step">
+        <div class="n">Step 4 — 원천 전파</div>
+        <div class="t">propagate_origins</div>
+        <div class="d">state(오브젝트가 보유한 원천별 잔액)를 exec_seq 오름차순으로 엣지에 태워
+        이동시킨다. 규칙별 풀 산정 → 비례 배분 → sender 잔액 차감 → 압축 → ε-프루닝.
+        최종 잔여 state가 곧 trace 테이블이 된다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 알고리즘 ══════════════ -->
+<section id="algo">
+  <div class="wrap">
+    <div class="band">
+      <div class="band-inner">
+        <span class="eyebrow">The Core</span>
+        <h2 class="serif">전파 알고리즘</h2>
+        <p class="sub">propagate_origins — 이 엔진의 심장</p>
+
+        <h3 class="subhead">세 가지 이동 규칙</h3>
+        <div class="rulecards">
+          <div class="rule">
+            <div class="badge serif">A</div>
+            <div class="name">계정보존 — Distribution</div>
+            <div class="txt">RKIV/RKPV, RKIB. 원가요소가 유지된 채 이동하므로 풀을
+            <strong>(sender, 원가요소)</strong> 단위로 잡고, 같은 원가요소의 state만 비례 이동.</div>
+          </div>
+          <div class="rule">
+            <div class="badge serif">B</div>
+            <div class="name">가중평균 — Assessment</div>
+            <div class="txt">RKIU/RKPU와 아웃플로우. 어세스먼트 원가요소로 뭉쳐 나가므로 풀은
+            <strong>sender 전체</strong> — 모든 state가 금액 비중대로 함께 이동.</div>
+          </div>
+          <div class="rule">
+            <div class="badge serif">U</div>
+            <div class="name">추적불가 — Untraceable</div>
+            <div class="txt">PAROB가 비었거나 무의미(길이 ≤ 2)해 sender를 모르는 엣지.
+            리시버 앵커의 <code>UNTRACEABLE</code> state로 정직하게 등록.</div>
+          </div>
+        </div>
+
+        <h3 class="subhead">이동 수식</h3>
+        <div class="prose">
+          <p>exec_seq가 같은 엣지 묶음마다 (A 먼저, B 다음):</p>
+        </div>
+        <pre>pool(sender[, kstar]) = Σ state(sender[, kstar])           <span class="c">" 규칙별 풀</span>
+이동분  = state.amount × edge.amount / pool                  <span class="c">" 원천별 비례 배분</span>
+잔여분  = state.amount × (pool − sent) / pool                <span class="c">" sender에 남는 몫</span></pre>
+        <div class="prose">
+          <p>이동한 조각은 원천 속성(origin_objnr / origin_kstar / origin_type / origin_vrgng)을
+          <strong>그대로 들고</strong> 리시버의 state가 된다. 이후 라운드에서 리시버가 다시 sender가
+          되면 그 조각이 또 이동한다 — 다단 배부가 자연스럽게 원천까지 연결되는 이유다.</p>
+        </div>
+
+        <h3 class="subhead">pool = 0 폴백 — 자기참조 금지 (2026-07-23 수정)</h3>
+        <div class="prose">
+          <p>엣지가 있는데 sender의 state가 비어 있으면(이미 전부 배부됐거나 음수 상쇄) 비례 배분이
+          불가능하다. 이때 이동액은 <code>UNTRACEABLE</code>로 방출하되 <strong>origin은 반드시
+          sender</strong>로 남긴다. 초기 구현은 origin을 receiver로 찍었고, 그 결과 IDES 2018년
+          데이터에서 <code>#COPA → #COPA = 123,601.17</code> 같은 자기참조 터미널 행이 나왔다
+          — "터미널이 자기 자신을 원천으로 갖는 행은 무조건 버그"라는 검증 규칙으로 잡아낸 결함.
+          수정 후 같은 데이터셋에서 자기참조 0건, 모든 UNTRACEABLE 행이 실제 sender를 보여준다.</p>
+        </div>
+
+        <h3 class="subhead">프루닝과 대사 불변식</h3>
+        <div class="prose">
+          <p>라운드마다 state를 키(오브젝트·현재원가요소·원천 4속성)로 압축하고,
+          |잔액| &lt; ε(0.01)인 조각은 계산에서 제외한다. 단, <strong>버리지 않고</strong>
+          <code>origin_type='PRUNED'</code> 행으로 출력에 방출한다. 그래서:</p>
+        </div>
+        <pre>ev_in  = Σ 자기비용 + Σ UNTRACEABLE 유입      <span class="c">" 엔진에 들어온 총량</span>
+ev_out = Σ et_trace.amount                     <span class="c">" 엔진에서 나간 총량</span>
+<span class="k">불변식: ev_in = ev_out</span>  <span class="c">" PRUNED 방출 덕에 항상 성립 — 리포트 헤더에 diff 표기</span></pre>
+        <div class="prose">
+          <p>내부 계산은 <code>P LENGTH 16 DECIMALS 6</code>(amt6)으로 하고 출력만
+          2자리로 반올림한다. 반올림 잔차는 <strong>final_objnr 버킷별로</strong> 그 버킷의 최대
+          금액 행에 몰아 보정한다 — 전역 1회 보정이던 초기 구현은 #COPA 버킷이 원본 전표 대비
+          0.02 어긋났고, 버킷별 보정으로 바꾼 뒤 센트 단위까지 일치한다(158,525.57).</p>
+          <p>구현 디테일 하나: EMPTY KEY 표준 테이블에는 <code>COLLECT</code>가 실패하므로
+          압축·집계는 전부 HASHED 테이블 수동 집계로 구현되어 있다(실측 확인된 제약).</p>
+        </div>
+
+        <h3 class="subhead">입력 가드</h3>
+        <div class="prose">
+          <p><code>get_origin_trace</code>는 WRTTP로 '04'(실적) 외의 모든 값을 <strong>명시적으로
+          '01'(계획)로 강제</strong>한다. 이전에는 '99' 같은 값이 조용히 계획 분기로 흘러 trace 행
+          라벨까지 오염시켰다. 실적 경로는 VERSN을 '000'으로 고정한다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 결과 스키마 ══════════════ -->
+<section>
+  <div class="wrap">
+    <div class="band">
+      <div class="band-inner">
+        <span class="eyebrow">Output</span>
+        <h2 class="serif">결과 한 행의 의미</h2>
+        <p class="sub">ty_trace — "이 원천에서 온 이 금액이, 지금 여기에 있다"</p>
+        <div class="tablewrap">
+        <table>
+          <thead><tr><th>필드</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td class="key">kokrs · gjahr · perio · versn · wrttp</td><td>실행 컨텍스트 (관리회계영역 · 연도 · 기간 · 버전 · 실적/계획)</td></tr>
+            <tr><td class="key">origin_objnr · origin_kstar</td><td class="desc">원천 — 금액이 처음 발생한 오브젝트와 원가요소</td></tr>
+            <tr><td class="key">final_objnr · final_kstar</td><td class="desc">최종 — 금액이 지금 놓여 있는 오브젝트와 원가요소 (터미널이면 <code>#COPA</code>/<code>#SETTLEMENT</code>)</td></tr>
+            <tr><td class="key">amount</td><td>이 (원천→최종) 조합의 금액, 2자리 보정 완료</td></tr>
+            <tr><td class="key">origin_type</td><td><code>PRIMARY</code> 1차 전기 · <code>EXTERNAL</code> CO 외부/타기능 유입 · <code>UNTRACEABLE</code> 원천 미상(정직 표기) · <code>PRUNED</code> ε 미만 프루닝 잔량</td></tr>
+            <tr><td class="key">origin_vrgng</td><td>원천 발생 당시의 업무 트랜잭션 (COIN, RKP1, KSPA…)</td></tr>
+            <tr><td class="key">final_type</td><td><code>OBJECT</code> CO 오브젝트 잔류 · <code>TO_COPA</code> CO-PA 유출 · <code>TO_SETTLEMENT</code> 정산 유출</td></tr>
+          </tbody>
+        </table>
+        </div>
+
+        <h3 class="subhead">호출 API</h3>
+        <pre><span class="c">" 엔진 — 한 달치 원천추적 전수 테이블</span>
+ycl_co_cca_trace_abap=><span class="k">get_origin_trace</span>(
+  EXPORTING iv_kokrs = 'A000' iv_gjahr = '2025' iv_poper = '005'
+            iv_versn = '000'  iv_wrttp = '04'   <span class="c">" '04' 실적 / 그 외 → '01' 계획</span>
+  IMPORTING et_trace = lt_trace                 <span class="c">" 원천→최종 전수 분해</span>
+            ev_in    = lv_in  ev_out = lv_out ) <span class="c">" 대사: lv_in = lv_out</span>
+
+<span class="c">" 리포트 — SE38 YCCA_TRACE_ORIGIN</span>
+<span class="c">"   KOKRS + 조회월(YYYYMM) + 실적/계획(+버전) + BUKRS/GSBER 표시필터(final/origin/both)</span>
+<span class="c">"   p_noalv='X' → 헤드리스: 건수/대사값을 MEMORY ID 'YCCA_TRACE_TEST'로 EXPORT</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 검증 ══════════════ -->
+<section id="verify">
+  <div class="wrap">
+    <div class="band">
+      <div class="band-inner">
+        <span class="eyebrow">Evidence</span>
+        <h2 class="serif">실측으로 검증했다</h2>
+        <p class="sub">2026-07-23 · 라이브 IDES · 대사 검사 + 실제 행 판독 병행</p>
+        <div class="tablewrap">
+        <table>
+          <thead><tr><th>데이터셋</th><th>시나리오</th><th class="num">행</th><th class="num">in = out</th><th>판정</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">Z004 · 2023 · 010</td><td class="desc">실적 — RKIU 36,000 + RKIV 27,000 혼합</td><td class="num">35</td><td class="num amt">84,000.00</td><td class="ok">diff 0 · 전 행 PRIMARY</td></tr>
+            <tr><td class="mono">Z004 · 2023 · 010</td><td class="desc">오브젝트별 독립 대사 — 엔진 합계 vs 명세서 직합</td><td class="num">7 obj</td><td class="num amt">—</td><td class="ok">7/7 일치</td></tr>
+            <tr><td class="mono">A000 · 2025 · 005</td><td class="desc">계획 — RKPU/RKPV, 버전 000, 규칙 A 실증</td><td class="num">111</td><td class="num amt">1,475,835.43</td><td class="ok">diff 0</td></tr>
+            <tr><td class="mono">A000 · 2018 · 010</td><td class="desc">아웃플로우 — KSPA→#COPA · KOAO/KOAL→#SETTLEMENT</td><td class="num">915</td><td class="num amt">−4,151,409.56</td><td class="ok">diff 0 · 자기참조 0 · 버킷 센트일치</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="note"><strong>대사만으로는 부족했다.</strong> 질량보존(diff=0)은 자기참조 터미널
+        버그가 있는 상태에서도 내내 통과였다. 결함은 상위 금액 행을 사람이 읽듯 판독하는 검사
+        ("#COPA가 왜 자기 자신에게서 왔지?")에서만 드러났다 — 이 스택의 검증 원칙:
+        <em>reconciliation + 실제 행 판독을 항상 병행한다.</em></p>
+
+        <h3 class="subhead">알려진 한계</h3>
+        <div class="tablewrap">
+        <table>
+          <thead><tr><th>항목</th><th>내용</th></tr></thead>
+          <tbody>
+            <tr><td class="desc">단일 월 단위</td><td>리포트는 한 번에 한 회계월(YYYYMM)을 처리. 기간 범위 누적 추적은 엔진 시그니처 확장 필요</td></tr>
+            <tr><td class="desc">회계연도 가정</td><td>YYYYMM → GJAHR/POPER 변환은 calendar = fiscal 가정. 변형 회계연도 KOKRS는 T009 변환 로직 필요</td></tr>
+            <tr><td class="desc">전파 범위</td><td>전파는 항상 KOKRS 전체로 수행 — BUKRS/GSBER는 결과 표시 필터일 뿐, 전파를 제한하면 대사가 깨진다</td></tr>
+            <tr><td class="desc">음수 총량</td><td>재전기·미상쇄 대변이 많은 데이터는 in이 음수일 수 있음 — 엔진은 그대로 보존하고, 리포트가 경고 라벨을 띄운다</td></tr>
+            <tr><td class="desc">UNTRACEABLE의 의미</td><td>버그가 아니라 정보의 한계에 대한 정직한 표기 — sender state가 비었거나 PAROB이 없는 금액. 원천 분해 품질 지표로 활용</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="closer">
+      <div class="band-inner">
+        <span class="eyebrow k">The Invariant</span>
+        <div class="v serif">in&nbsp;=&nbsp;out</div>
+        <p class="note2">프루닝 잔량도, 추적불가 금액도, CO 밖으로 나간 유출도 —
+        버리지 않고 이름을 붙여 내보낸다. 그래서 이 등식은 검사가 아니라 약속이다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<p class="pagefoot">CCA 배부 원천추적 · 순수 ABAP 단일 엔진 (YCL_CO_CCA_TRACE_ABAP + RPT + YCCA_TRACE_ORIGIN)<br>
+로직 정리 문서 · 2026-07-23 기준 · 검증: 라이브 IDES 실측 4개 데이터셋</p>
+
+</body>
+</html>
