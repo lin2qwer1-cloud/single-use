@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기능/기술설계서 — CCA 배부 원천추적 (YCCA_TRACE_ORIGIN)</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --biz-bg:#dafbe1; --biz-fg:#116329; --dev-bg:#ddf4ff; --dev-fg:#0550ae;
+    --th:#eaeef2; --key-bg:#fff8c5; --key-fg:#7d4e00; --spine:#ddf4ff; --sat:#eef2f5; --line:#6e7781;
+    --bad-bg:#ffebe9; --bad-fg:#cf222e; --good-bg:#dafbe1; --good-fg:#116329;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --biz-bg:#12261e; --biz-fg:#3fb950; --dev-bg:#0d2d4a; --dev-fg:#79c0ff;
+      --th:#21262d; --key-bg:#3b2e00; --key-fg:#e3b341; --spine:#0d2d4a; --sat:#1c2128; --line:#8b949e;
+      --bad-bg:#2d1214; --bad-fg:#ff7b72; --good-bg:#12261e; --good-fg:#3fb950;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --biz-bg:#12261e; --biz-fg:#3fb950; --dev-bg:#0d2d4a; --dev-fg:#79c0ff;
+      --th:#21262d; --key-bg:#3b2e00; --key-fg:#e3b341; --spine:#0d2d4a; --sat:#1c2128; --line:#8b949e;
+      --bad-bg:#2d1214; --bad-fg:#ff7b72; --good-bg:#12261e; --good-fg:#3fb950;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --biz-bg:#dafbe1; --biz-fg:#116329; --dev-bg:#ddf4ff; --dev-fg:#0550ae;
+    --th:#eaeef2; --key-bg:#fff8c5; --key-fg:#7d4e00; --spine:#ddf4ff; --sat:#eef2f5; --line:#6e7781;
+    --bad-bg:#ffebe9; --bad-fg:#cf222e; --good-bg:#dafbe1; --good-fg:#116329;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","맑은 고딕",sans-serif;
+    line-height:1.75;font-size:16px;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px 120px;}
+  header.top{padding:46px 20px 30px;border-bottom:1px solid var(--border);}
+  header.top h1{font-size:1.9rem;margin:0 0 8px;}
+  header.top p{color:var(--muted);margin:4px 0;}
+  nav.toc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin:26px 0;}
+  nav.toc h2{font-size:.95rem;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  nav.toc ol{margin:0;padding-left:22px;}
+  nav.toc a{color:var(--accent);text-decoration:none;} nav.toc a:hover{text-decoration:underline;}
+  h2.sec{font-size:1.5rem;margin:54px 0 8px;padding-top:12px;border-top:2px solid var(--border);}
+  h3{font-size:1.16rem;margin:30px 0 6px;}
+  p{margin:10px 0;}
+  code{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;padding:1px 5px;
+    font-family:"SF Mono",Consolas,monospace;font-size:.88em;}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:13px 15px;
+    overflow-x:auto;margin:12px 0;}
+  pre code{background:none;border:none;padding:0;font-size:.82rem;line-height:1.55;color:var(--code-fg);}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.86rem;display:block;overflow-x:auto;}
+  th,td{border:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top;}
+  th{background:var(--th);font-weight:600;white-space:nowrap;}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .note{background:var(--card);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+  .note b{color:var(--accent);}
+  .warn{background:var(--bad-bg);border-left:4px solid var(--bad-fg);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;}
+  .warn b{color:var(--bad-fg);}
+  .diagram{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin:14px 0;overflow-x:auto;}
+  .diagram pre{background:none;border:none;padding:0;margin:0;color:var(--fg);font-size:.82rem;}
+  ul.expl{margin:8px 0;padding-left:20px;} ul.expl li{margin:5px 0;}
+  .themebtn{position:fixed;top:14px;right:14px;background:var(--card);color:var(--fg);border:1px solid var(--border);
+    border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem;z-index:10;}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem;}
+</style>
+</head>
+<body>
+<button class="themebtn" onclick="(function(){var r=document.documentElement;var d=(r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));r.setAttribute('data-theme',d==='dark'?'light':'dark');})()">◐ 테마</button>
+<header class="top">
+  <div class="wrap" style="padding:0;">
+    <h1>기능/기술설계서 — CCA 배부 원천추적</h1>
+    <p>YCCA_TRACE_ORIGIN · YCL_CO_CCA_TRACE_ABAP · YCL_CO_CCA_TRACE_RPT (+병행 AMDP)</p>
+    <p>버전 2.0 · 기준일 2026-07-23 · 시스템 S4H(client 100) · 짝 문서:
+    <a href="[원천추적] YCL_CO_CCA_TRACE_ABAP 한줄해부.html" style="color:var(--accent)">교육용 한줄해부</a></p>
+  </div>
+</header>
+<div class="wrap">
+
+<table>
+  <thead><tr><th colspan="2">문서 정보</th></tr></thead>
+  <tbody>
+    <tr><td style="width:180px"><b>모듈 / 영역</b></td><td>CO-OM-CCA (코스트센터 회계 · 배부)</td></tr>
+    <tr><td><b>프로그램 ID</b></td><td>YCCA_TRACE_ORIGIN (트랜잭션 미배정 — SE38 실행)</td></tr>
+    <tr><td><b>개발 패키지 / CTS</b></td><td>YCO_CCA (super: YJMG) / S4HK904033</td></tr>
+    <tr><td><b>유형</b></td><td>조회 리포트 (데이터 변경 없음, 저장 CBO 없음 — 매 실행 재계산)</td></tr>
+  </tbody>
+</table>
+<table>
+  <thead><tr><th>버전</th><th>일자</th><th>내용</th></tr></thead>
+  <tbody>
+    <tr><td>1.0</td><td>2026-07-08</td><td>초판 — AMDP(SQLScript) 엔진 기반</td></tr>
+    <tr><td>2.0</td><td>2026-07-23</td><td>순수 ABAP 단일 엔진 전환(타입 원본 이전) · 결함수정 3건(pool=0 폴백 origin, WRTTP 가드, 버킷별 잔차보정) · 음수 입력 경고 · AMDP는 독립 병행 트랙으로 존치</td></tr>
+  </tbody>
+</table>
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#a1">A. 기능설계 — 개요·요구사항</a></li>
+    <li><a href="#a4">A4. 화면 설계</a></li>
+    <li><a href="#a5">A5. 권한 · 검증</a></li>
+    <li><a href="#b1">B. 기술설계 — 오브젝트 구성</a></li>
+    <li><a href="#b2">B2. 데이터 모델</a></li>
+    <li><a href="#b3">B3. 인터페이스 명세</a></li>
+    <li><a href="#b4">B4. 처리 로직 상세</a></li>
+    <li><a href="#b5">B5. 예외 · 성능 · 제약</a></li>
+    <li><a href="#b7">B7. 병행 AMDP 트랙</a></li>
+    <li><a href="#b9">B9. 테스트 명세 · 결과</a></li>
+  </ol>
+</nav>
+
+<!-- ============ A. 기능설계 ============ -->
+<h2 class="sec" id="a1">A. 기능설계</h2>
+
+<h3>A1. 개요 · 배경</h3>
+<p>CCA 배부 사이클(어세스먼트·배분·간접활동배분)이 다단으로 실행되면 최종 리시버에 집계된 금액의
+<b>발생 원천</b>을 표준 기능으로 식별할 수 없다. 본 기능은 한 회계월의 배부 전기를 실행 순서대로 재생하여
+모든 최종 잔액·유출액을 <b>(원천 오브젝트·원가요소) × (최종 오브젝트·원가요소)</b> 전수 조합으로 분해해 제공한다.</p>
+
+<h3>A2. 업무 요구사항</h3>
+<table>
+  <thead><tr><th>ID</th><th>요구사항</th><th>구현</th></tr></thead>
+  <tbody>
+    <tr><td>R-01</td><td>최종 리시버 금액의 원천 상세를 전수 테이블로 제공</td><td>ty_trace 전수 분해 (B4)</td></tr>
+    <tr><td>R-02</td><td>실적(WRTTP 04)과 계획(WRTTP 01, 버전 지정) 모두 지원</td><td>선택화면 라디오 + 엔진 분기</td></tr>
+    <tr><td>R-03</td><td>사이클 마스터(T811C/S)는 사후 변경 가능하므로 참조 금지 — 전기 이력만 근거로 사용</td><td>T811D 실행 인덱스 + COEP/COEJ/COBK만 사용</td></tr>
+    <tr><td>R-04</td><td>유입 총량과 산출 총량의 대사(in=out)가 항상 성립하고 화면에 표시될 것</td><td>PRUNED/UNTRACEABLE 방출 설계 + ALV 헤더 diff 표시</td></tr>
+    <tr><td>R-05</td><td>CO 외부 유출(CO-PA·정산)도 원천 분해 대상에 포함</td><td>#COPA/#SETTLEMENT 가상 터미널</td></tr>
+    <tr><td>R-06</td><td>회사코드/사업영역 필터 — 단, 배부는 KOKRS 전역 현상이므로 표시 단계에서만 적용</td><td>filter_trace 3모드 (전파 후 필터)</td></tr>
+    <tr><td>R-07</td><td>관리회계영역을 기본 선택조건으로 포함 (CO 공통 표준)</td><td>p_kokrs OBLIGATORY, MEMORY ID cac</td></tr>
+    <tr><td>R-08</td><td>화면 출력 텍스트는 영어 (공통 표준)</td><td>ALV 컬럼/헤더/메시지 전부 영어</td></tr>
+  </tbody>
+</table>
+
+<h3>A3. 프로세스 흐름 (사용자 관점)</h3>
+<div class="diagram"><pre>
+ [선택화면]                [엔진]                        [화면]
+ KOKRS·조회월 입력   →   배부 전기 재생·원천 분해   →   ALV: 원천→최종 전수 행
+ 실적/계획 선택           (KOKRS 전체 전파)              헤더: in/out/diff + 경고
+ 표시필터(BUKRS/GSBER)                                   소계: 최종 오브젝트별
+</pre></div>
+
+<h3 id="a4">A4. 화면 설계</h3>
+<h4 style="color:var(--muted)">A4.1 선택화면</h4>
+<table>
+  <thead><tr><th>블록</th><th>필드</th><th>타입</th><th>필수</th><th>기본값</th><th>설명</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="2">b1 (text-001)</td><td><code>p_kokrs</code></td><td>KOKRS</td><td>●</td><td>MEMORY ID cac</td><td>관리회계영역</td></tr>
+    <tr><td><code>p_spmon</code></td><td>SPMON</td><td>●</td><td>당월(sy-datum)</td><td>조회월 YYYYMM (단일 월)</td></tr>
+    <tr><td rowspan="3">b2 (text-002)</td><td><code>p_act</code></td><td>라디오</td><td rowspan="2">택1</td><td>선택됨</td><td>실적 (WRTTP 04)</td></tr>
+    <tr><td><code>p_pln</code></td><td>라디오</td><td></td><td>계획 (WRTTP 01)</td></tr>
+    <tr><td><code>p_versn</code></td><td>VERSN</td><td>계획 시 ●</td><td>'000'</td><td>계획 버전. 실적 선택 시 입력 차단(MODIF ID pln)</td></tr>
+    <tr><td rowspan="5">b3 (text-003)</td><td><code>s_bukrs</code></td><td>SELECT-OPTIONS</td><td>-</td><td>-</td><td>회사코드 표시필터</td></tr>
+    <tr><td><code>s_gsber</code></td><td>SELECT-OPTIONS</td><td>-</td><td>-</td><td>사업영역 표시필터</td></tr>
+    <tr><td><code>p_ffin</code></td><td>라디오</td><td rowspan="3">택1</td><td>선택됨</td><td>필터 기준 = 최종(final)</td></tr>
+    <tr><td><code>p_forg</code></td><td>라디오</td><td></td><td>필터 기준 = 원천(origin)</td></tr>
+    <tr><td><code>p_fbth</code></td><td>라디오</td><td></td><td>필터 기준 = 양쪽(both)</td></tr>
+    <tr><td>(숨김)</td><td><code>p_noalv</code></td><td>ABAP_BOOL</td><td>-</td><td>-</td><td>NO-DISPLAY. 'X'면 헤드리스 테스트 모드 (B9.1)</td></tr>
+  </tbody>
+</table>
+<div class="note"><b>구현 주의</b> — 블록 타이틀은 반드시 정적 텍스트심볼(text-001~003)로 유지할 것.
+런타임 변수 타이틀은 헤드리스 <code>SUBMIT ... AND RETURN</code> 실행을 조용히 깨뜨린다(실측 확인, 소스 주석 명시).</div>
+
+<h4 style="color:var(--muted)">A4.2 ALV 출력 (SALV)</h4>
+<table>
+  <thead><tr><th>영역</th><th>내용</th></tr></thead>
+  <tbody>
+    <tr><td>헤더 1행</td><td><code>Month YYYYMM - propagation: whole KOKRS xxxx; BUKRS/GSBER = display filter only</code></td></tr>
+    <tr><td>헤더 2행</td><td><code>Reconciliation (propagation): in=… out=… diff=…</code> — <b>diff는 항상 0.00이어야 정상</b></td></tr>
+    <tr><td>헤더 3행</td><td><code>Displayed: rows=… sum=… 통화</code> (표시필터 적용 후 값)</td></tr>
+    <tr><td>헤더 4행(조건부)</td><td>in&lt;0일 때: <code>Warning: total traced input is negative - source data may contain unmatched credits</code></td></tr>
+    <tr><td>컬럼</td><td>Origin object/cost elem/CoCode/BusArea/text · Final object/cost elem/CoCode/BusArea/text · Amount(통화 TKA01) · origin_type/vrgng · final_type. OBJNR 원본 2필드는 technical(숨김)</td></tr>
+    <tr><td>집계</td><td>Amount 총계 + FINAL_KEY 소계(subtotal), FINAL_KSTAR 2차 정렬 · 레이아웃 저장 허용</td></tr>
+  </tbody>
+</table>
+
+<h3 id="a5">A5. 권한 · 입력 검증</h3>
+<table>
+  <thead><tr><th>시점</th><th>검사</th><th>실패 시</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="3">AT SELECTION-SCREEN</td><td>조회월 월부분 01~12</td><td>E 메시지 "Enter a valid month YYYYMM (01..12)"</td></tr>
+    <tr><td>계획 선택 시 버전 필수</td><td>E 메시지 "Enter a plan version"</td></tr>
+    <tr><td><code>AUTHORITY-CHECK OBJECT 'K_CSKS'</code> — KOKRS=p_kokrs, KOSTL DUMMY, ACTVT '28'(표시)</td><td>E 메시지 "No CO display authorization for this controlling area"</td></tr>
+    <tr><td>엔진 내부</td><td>WRTTP '04' 외 → '01' 명시 강제 (라벨 오염 방지)</td><td>조용히 계획 경로 (B4.1)</td></tr>
+  </tbody>
+</table>
+
+<!-- ============ B. 기술설계 ============ -->
+<h2 class="sec" id="b1">B. 기술설계</h2>
+
+<h3>B1. 오브젝트 구성</h3>
+<table>
+  <thead><tr><th>오브젝트</th><th>타입</th><th>책임</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td><b>YCL_CO_CCA_TRACE_ABAP</b></td><td>CLAS</td><td>엔진 전부 — 엣지 추출·자기비용·전파. <b>공용 타입의 원본</b></td><td>Open SQL + 내부테이블만, DB 비의존</td></tr>
+    <tr><td><b>YCL_CO_CCA_TRACE_RPT</b></td><td>CLAS</td><td>OBJNR→마스터 속성(derive_attrs), 표시필터(filter_trace)</td><td>업무 판단 없음 — 표시 보조만</td></tr>
+    <tr><td><b>YCCA_TRACE_ORIGIN</b></td><td>PROG</td><td>선택화면 + SALV + 테스트모드</td><td>표준 헤더 블록(YCOT1100 형식) 포함</td></tr>
+    <tr><td>YCL_CO_CCA_TRACE_AMDP</td><td>CLAS</td><td>병행 트랙 (B7)</td><td>운영 경로에서 호출되지 않음</td></tr>
+  </tbody>
+</table>
+<div class="diagram"><pre>
+ YCCA_TRACE_ORIGIN ──uses──> YCL_CO_CCA_TRACE_RPT ──types──┐
+        │                                                   ├──> YCL_CO_CCA_TRACE_ABAP (타입 원본)
+        └────────────────────uses──────────────────────────┘
+ YCL_CO_CCA_TRACE_AMDP  (참조 관계 없음 — 완전 독립)
+</pre></div>
+
+<h3 id="b2">B2. 데이터 모델</h3>
+<h4 style="color:var(--muted)">B2.1 원천 테이블 (읽기 전용)</h4>
+<table>
+  <thead><tr><th>테이블</th><th>용도</th><th>키 조건 / 필터</th></tr></thead>
+  <tbody>
+    <tr><td>T811D</td><td>사이클 실행 인덱스 (앵커)</td><td><code>tab='CCSS'</code>, <code>nkrsub=KOKRS</code>, gjahr, perio, <code>reversed=''</code>; 전표 연결키 docnr</td></tr>
+    <tr><td>COEP</td><td>실적 명세 (엣지=리시버 라인 <code>beknz='S'</code> / 자기비용=사이클 외 전 라인)</td><td><code>wrttp='04'</code>, <code>versn='000'</code>; 엣지 VRGNG IN (RKIU,RKIV,RKIB), 자기비용 NOT IN</td></tr>
+    <tr><td>COEJ</td><td>계획 명세 — wkg001~012 언피벗</td><td><code>wrttp='01'</code>, <code>versn=p_versn</code>; 엣지 (RKPU,RKPV) / 자기비용 NOT IN</td></tr>
+    <tr><td>COBK</td><td>전표 헤더 — 시각(cpudt/cputm→exec_seq), 역분개(<code>stflg=''</code>,<code>stokz=''</code> — 실적 엣지에 적용)</td><td>kokrs,belnr,gjahr</td></tr>
+    <tr><td>CSKS/CSKT · AUFK · PRPS · TKA01</td><td>표시 속성(회사코드·사업영역·텍스트·통화)</td><td>키일자=조회월 말일 (CSKS/CSKT)</td></tr>
+  </tbody>
+</table>
+<div class="warn"><b>역분개 이중 필터 필수</b> — run 레벨(T811D.reversed) + 전표 레벨(COBK.stflg/stokz).
+한쪽만 적용 시 재전기 혼재 데이터에서 이중 계산 발생(실측).</div>
+<div class="note"><b>COEP 리다이렉트</b> — ABAP Open SQL의 <code>coep</code>는 커널이 호환 뷰로 우회.
+네이티브/AMDP/DB 콘솔에서는 <code>v_coep_view</code>를 직접 참조해야 동일 데이터를 얻는다.</div>
+
+<h4 style="color:var(--muted)">B2.2 내부 구조 (엔진 공용 타입 — 전부 YCL_CO_CCA_TRACE_ABAP에 정의)</h4>
+<table>
+  <thead><tr><th>타입</th><th>성격</th><th>핵심 필드</th></tr></thead>
+  <tbody>
+    <tr><td><code>ty_edge / tt_edge</code></td><td>배부 간선</td><td>perio, cycle, <b>exec_seq</b>(int8=CPUDT×10⁶+CPUTM), vrgng, <b>rule</b>(A/B/U), sender, receiver, kstar, amount(P12.2)</td></tr>
+    <tr><td><code>ty_self / tt_self</code></td><td>자기비용</td><td>perio, objnr, kstar, vrgng, origin_type(PRIMARY/EXTERNAL), amount</td></tr>
+    <tr><td><code>ty_state / tt_state</code></td><td>전파 조각 (내부)</td><td>obj, cur_kstar(현재 위치) + origin_objnr/kstar/type/vrgng(불변) + amount(<b>P16.6</b> 고정밀)</td></tr>
+    <tr><td><code>ty_trace / tt_trace</code></td><td>출력</td><td>컨텍스트 5 + origin 2 + final 2 + amount(P12.2) + origin_type/vrgng + final_type</td></tr>
+  </tbody>
+</table>
+
+<h3 id="b3">B3. 인터페이스 명세</h3>
+<table>
+  <thead><tr><th>메서드</th><th>IMPORTING</th><th>EXPORTING/RETURNING</th><th>책임</th></tr></thead>
+  <tbody>
+    <tr><td><code>get_origin_trace</code> ★진입점</td><td>iv_kokrs, iv_gjahr, iv_poper, iv_versn, iv_wrttp</td><td>et_trace, ev_in, ev_out</td><td>오케스트레이션 + WRTTP/VERSN 가드</td></tr>
+    <tr><td><code>get_actual_edges</code></td><td>iv_kokrs, iv_gjahr, iv_poper</td><td>rt_edge</td><td>실적 엣지 (T811D×COEP×COBK)</td></tr>
+    <tr><td><code>get_plan_edges</code></td><td>+ iv_versn</td><td>rt_edge</td><td>계획 엣지 (COEJ 언피벗)</td></tr>
+    <tr><td><code>get_self_costs</code></td><td>+ iv_versn, iv_wrttp</td><td>et_self, et_outflow</td><td>자기비용 + 아웃플로우 의사엣지</td></tr>
+    <tr><td><code>propagate_origins</code></td><td>it_edge, it_self, iv_poper, iv_eps(기본 0.01)</td><td>et_trace, ev_in, ev_out</td><td>전파 알고리즘 (B4.3)</td></tr>
+    <tr><td>RPT <code>derive_attrs</code></td><td>it_trace, iv_kokrs, iv_keydate</td><td>rt_attr (HASHED by objnr)</td><td>KS/OR/PR 마스터 속성</td></tr>
+    <tr><td>RPT <code>filter_trace</code></td><td>it_trace, it_attr, it_bukrs, it_gsber, iv_mode(F/O/B)</td><td>et_trace, ev_sum</td><td>표시 필터</td></tr>
+  </tbody>
+</table>
+
+<h3 id="b4">B4. 처리 로직 상세</h3>
+<h4 style="color:var(--muted)">B4.1 전체 흐름</h4>
+<div class="diagram"><pre>
+ ① WRTTP 정규화: '04' 외 전부 → '01' (실적이면 VERSN '000' 고정)
+ ② 엣지 추출     : 실적 get_actual_edges / 계획 get_plan_edges
+ ③ 자기비용 수집 : get_self_costs — 사이클 VRGNG "제외" 전 라인 (②와 정확히 상보)
+ ④ 아웃플로우    : KSPA/KSOS/KOAO/KOAL 음수 라인 → #COPA/#SETTLEMENT행 rule B 의사엣지 (부호 반전)
+ ⑤ 전파          : propagate_origins (B4.3)
+ ⑥ 컨텍스트 스탬프: kokrs/gjahr/versn/wrttp를 전 행에 기록
+</pre></div>
+
+<h4 style="color:var(--muted)">B4.2 엣지 분류 규칙</h4>
+<table>
+  <thead><tr><th>rule</th><th>판정 (derive_rule)</th><th>대상 VRGNG</th><th>전파 방식</th></tr></thead>
+  <tbody>
+    <tr><td><b>U</b></td><td>PAROB 공백 제거 후 길이 ≤ 2</td><td>(모든)</td><td>전파 제외 — 리시버 앵커 UNTRACEABLE state로 직등록</td></tr>
+    <tr><td><b>B</b></td><td>VRGNG 4번째 글자 = 'U'</td><td>RKIU, RKPU (+아웃플로우 강제 B)</td><td>풀 = sender <b>전체</b> state — 가중평균 이동</td></tr>
+    <tr><td><b>A</b></td><td>그 외</td><td>RKIV, RKPV, RKIB</td><td>풀 = sender의 <b>같은 원가요소</b> state — 계정보존 이동</td></tr>
+  </tbody>
+</table>
+
+<h4 style="color:var(--muted)">B4.3 전파 알고리즘 (propagate_origins)</h4>
+<div class="diagram"><pre>
+ 초기화: state ← 자기비용(origin=자기) ∪ rule-U 엣지(UNTRACEABLE)
+         ev_in ← Σ state
+
+ FOR exec_seq (오름차순):            ← 실제 전기 시각 순서로 재생
+   FOR rule IN (A, B):               ← 같은 시각이면 A(계정보존) 먼저
+     pool[sender(,kstar)] ← Σ state  ; sent ← Σ edge
+     FOR each edge:
+       IF pool = 0:                  ← 분모 0 폴백
+         state(receiver) += UNTRACEABLE(origin=SENDER, kstar=edge.kstar)   ┐
+         ev_in += edge.amount                                              │ v2.0 수정:
+       ELSE:                         ← 비례 이동                            │ origin은 반드시
+         이동조각.amount = state.amount × edge.amount ÷ pool               │ sender (자기참조
+         이동조각.cur_kstar = edge.kstar ; origin_* 불변                   │ 터미널 금지)
+     sender state ×= (pool − sent) ÷ pool                                  ┘
+   압축: 6키(obj,cur_kstar,origin 4종) HASHED 수동 집계  ← EMPTY KEY 테이블은 COLLECT 불가(실측)
+   프루닝: |amount| < ε(0.01) → origin_type='PRUNED'로 출력 방출 (소멸 금지 — 대사 보존)
+
+ 마감: 6자리 → 2자리 반올림, 잔차는 final_objnr 버킷별로 그 버킷 최대금액 행에 흡수
+       (v2.0: 전역 1회 보정 → 버킷별 보정. 터미널 버킷 센트 일치 보장)
+ ev_out ← Σ et_trace.amount     불변식: ev_in = ev_out
+</pre></div>
+<ul class="expl">
+  <li><b>정밀도 정책</b> — 내부 P16.6, 출력 P12.2. 반올림은 마지막 1회 + 버킷별 잔차보정.</li>
+  <li><b>불변식 근거</b> — 이동+잔류=원금(비례 항등식), 프루닝·폴백 모두 방출/기록되므로 유입 총량은 반드시 출력 어딘가에 존재.</li>
+</ul>
+
+<h3 id="b5">B5. 예외 · 성능 · 제약</h3>
+<table>
+  <thead><tr><th>구분</th><th>내용</th></tr></thead>
+  <tbody>
+    <tr><td rowspan="3">성능</td><td>전 SELECT가 단일 KOKRS·단일 월 범위로 제한 — 대상 데이터 자체가 작음</td></tr>
+    <tr><td>모든 집계는 HASHED 테이블 O(1) 수동 COLLECT; 전파는 exec_seq 묶음 단위로만 순회</td></tr>
+    <tr><td>조각 폭발은 라운드별 6키 압축 + ε-프루닝으로 억제</td></tr>
+    <tr><td rowspan="4">제약</td><td>단일 월 단위 (기간 범위 확장은 시그니처 변경 필요)</td></tr>
+    <tr><td>YYYYMM→GJAHR/POPER 변환은 calendar=fiscal 가정 (변형 회계연도 시 T009 변환 추가 필요)</td></tr>
+    <tr><td>전파는 KOKRS 전역 고정 — BUKRS/GSBER로 전파를 제한하면 대사 불성립 (표시 필터로만 제공)</td></tr>
+    <tr><td>UNTRACEABLE 비중이 크면 원천 데이터 품질(PAROB 누락·시각 역전) 점검 신호로 해석</td></tr>
+  </tbody>
+</table>
+
+<h3 id="b7">B7. 병행 AMDP 트랙 (YCL_CO_CCA_TRACE_AMDP)</h3>
+<table>
+  <thead><tr><th>항목</th><th>ABAP 엔진 (운영)</th><th>AMDP 트랙 (병행)</th></tr></thead>
+  <tbody>
+    <tr><td>구현</td><td>Open SQL + 내부테이블</td><td>HANA SQLScript 프로시저 5종</td></tr>
+    <tr><td>시그니처</td><td>iv_poper 단일 월</td><td><code>iv_mandt</code> 명시 + <code>iv_perio_from/to</code> 범위 (AMDP는 클라이언트 자동필터 없음)</td></tr>
+    <tr><td>COEP 접근</td><td><code>coep</code> (커널 리다이렉트)</td><td><code>v_coep_view</code> 직접 (시스템 패치 후 강제, DDIC 뷰 v_coep는 E 오류)</td></tr>
+    <tr><td>pool=0 폴백</td><td>origin = sender (v2.0 수정)</td><td>origin = receiver (<b>원본 유지 — 의도적 미반영</b>)</td></tr>
+    <tr><td>잔차보정</td><td>final_objnr 버킷별</td><td>기간(perio)별 1행</td></tr>
+    <tr><td>상호 참조</td><td colspan="2" style="text-align:center">없음 (타입 각자 정의 — 어느 쪽을 삭제해도 다른 쪽 무영향)</td></tr>
+  </tbody>
+</table>
+<div class="note"><b>존치 목적</b> — 성능 비교·SQLScript 레퍼런스·결함 사례 교보재.
+동등성 실측: Z004/2023/010에서 두 엔진 모두 35행/84,000.00 일치. 차이 관찰용 데이터셋: A000/2018/010
+(AMDP는 자기참조 터미널 4행 발생 — 그것이 원본의 결함이자 보존 이유).
+AMDP 프로시저 내 주석은 ASCII 전용(한국어 주석 = 신택스 오류, 시스템 제약).</div>
+
+<h3 id="b9">B9. 테스트 명세 · 결과 (2026-07-23 라이브 실측)</h3>
+<h4 style="color:var(--muted)">B9.1 테스트 방법</h4>
+<ul class="expl">
+  <li><b>헤드리스 실행</b> — <code>SUBMIT ycca_trace_origin WITH p_noalv='X' ... AND RETURN</code> 후
+  <code>IMPORT ... FROM MEMORY ID 'YCCA_TRACE_TEST'</code>로 rows/in/out/sum 검증.</li>
+  <li><b>이중 검증 원칙</b> — 대사(diff=0)만으로는 분류 결함을 못 잡는다(실측: 자기참조 터미널 결함이 대사 통과 상태로 잠복).
+  반드시 <b>상위 금액 행 판독</b>(터미널 자기참조 0건, origin의 업무적 타당성)을 병행한다.</li>
+  <li><b>독립 대사</b> — 최종 오브젝트별 엔진 귀속합계 vs 명세서 직접 합계(SUM wkgbtr) 비교.</li>
+</ul>
+<h4 style="color:var(--muted)">B9.2 결과</h4>
+<table>
+  <thead><tr><th>케이스</th><th>데이터셋</th><th>기대</th><th>결과</th></tr></thead>
+  <tbody>
+    <tr><td>T-01 실적 혼합</td><td>Z004·2023·010 (RKIU 36,000 + RKIV 27,000)</td><td>diff=0, 전 행 PRIMARY</td><td>✓ 35행 · in=out=84,000.00</td></tr>
+    <tr><td>T-02 오브젝트별 독립 대사</td><td>동일 · 최종 오브젝트 7개 전수</td><td>전수 일치(±0.05)</td><td>✓ 7/7 불일치 0</td></tr>
+    <tr><td>T-03 계획</td><td>A000·2025·005 · versn 000</td><td>diff=0, 규칙 A 계정보존 확인</td><td>✓ 111행 · in=out=1,475,835.43</td></tr>
+    <tr><td>T-04 아웃플로우·음수</td><td>A000·2018·010 (KSPA 158,525.57 + KOAO/KOAL 4,180.62)</td><td>diff=0 · 자기참조 0 · 버킷 센트일치</td><td>✓ 915행 · in=out=−4,151,409.56 · #COPA 158,525.57 · #SETTLEMENT 4,180.62</td></tr>
+    <tr><td>T-05 엣지케이스</td><td>KOKRS 'XXXX' / WRTTP '99'</td><td>0행 무덤프 / 라벨 '01' 강제</td><td>✓</td></tr>
+    <tr><td>T-06 리포트 E2E</td><td>Z004·202310 헤드리스 SUBMIT</td><td>엔진 직호출과 동일</td><td>✓ 35행 · 84,000.00</td></tr>
+    <tr><td>T-07 병행 동등성</td><td>Z004·2023·010 · ABAP vs AMDP</td><td>행수·대사·상위행 일치</td><td>✓ 양쪽 35행 · 84,000.00</td></tr>
+  </tbody>
+</table>
+
+<h3>B10. 운영 가이드</h3>
+<ul class="expl">
+  <li><b>실행</b> — SE38 → YCCA_TRACE_ORIGIN. diff≠0이면 엔진 결함으로 간주하고 개발자에게 이관.</li>
+  <li><b>소스 백업</b> — <code>projects/backup/</code> 4파일 (엔진·헬퍼·리포트·AMDP). GitHub Private/single-use 리포의
+  로직 정리 문서에 전체 소스 부록 동봉.</li>
+  <li><b>관련 문서</b> — 교육용: <a href="[원천추적] YCL_CO_CCA_TRACE_ABAP 한줄해부.html" style="color:var(--accent)">한줄해부</a> ·
+  로직 요약+소스: [원천추적] YCL_CO_CCA_TRACE_ABAP.html · 구 AMDP 해부: [원천추적] YCL_CO_CCA_TRACE_AMDP.html</li>
+</ul>
+
+<footer>
+  기능/기술설계서 v2.0 · CCA 배부 원천추적 · 2026-07-23 · 모든 실측치는 S4H client 100 라이브 검증값
+</footer>
+</div>
+</body>
+</html>
