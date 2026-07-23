@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTP Trial 조직도 앱 — 환경·설계·여정 (RAP 실전 3부작 中 1부)</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --basic-bg:#dafbe1; --basic-fg:#116329; --adv-bg:#fff1e5; --adv-fg:#953800;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --basic-bg:#12261e; --basic-fg:#3fb950; --adv-bg:#2d1e12; --adv-fg:#db8b4c;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --basic-bg:#12261e; --basic-fg:#3fb950; --adv-bg:#2d1e12; --adv-fg:#db8b4c;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --basic-bg:#dafbe1; --basic-fg:#116329; --adv-bg:#fff1e5; --adv-fg:#953800;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","맑은 고딕",sans-serif;
+    line-height:1.75;font-size:16px;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 120px;}
+  header.top{padding:48px 20px 32px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  header.top h1{font-size:2rem;margin:0 0 8px;}
+  header.top p{color:var(--muted);margin:4px 0;}
+  nav.toc{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:18px 22px;margin:28px 0;}
+  nav.toc h2{font-size:1rem;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  nav.toc ol{margin:0;padding-left:22px;}
+  nav.toc a{color:var(--accent);text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+  h2.sec{font-size:1.5rem;margin:56px 0 8px;padding-top:12px;border-top:2px solid var(--border);}
+  h3{font-size:1.18rem;margin:32px 0 6px;}
+  h4{font-size:1.02rem;margin:22px 0 4px;}
+  p{margin:10px 0;}
+  code{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;
+    padding:1px 5px;font-family:"SF Mono",Consolas,"Courier New",monospace;font-size:.88em;}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;
+    padding:14px 16px;overflow-x:auto;margin:14px 0;}
+  pre code{background:none;border:none;padding:0;font-size:.85rem;line-height:1.6;color:var(--code-fg);}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:20px;
+    vertical-align:middle;margin-left:8px;letter-spacing:.02em;}
+  .b-basic{background:var(--basic-bg);color:var(--basic-fg);}
+  .b-adv{background:var(--adv-bg);color:var(--adv-fg);}
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:.9rem;display:block;overflow-x:auto;}
+  th,td{border:1px solid var(--border);padding:7px 11px;text-align:left;vertical-align:top;}
+  th{background:var(--th);font-weight:600;}
+  .note{background:var(--card);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:16px 0;}
+  .note b{color:var(--accent);}
+  .diagram{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;
+    margin:16px 0;overflow-x:auto;}
+  .diagram pre{background:none;border:none;padding:0;margin:0;color:var(--fg);font-size:.82rem;}
+  .pill{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:6px;
+    padding:1px 8px;font-size:.82rem;font-family:monospace;}
+  .themebtn{position:fixed;top:14px;right:14px;background:var(--card);color:var(--fg);
+    border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem;z-index:10;}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem;}
+  .roadmap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin:20px 0;}
+  .roadmap b{color:var(--accent);}
+</style>
+</head>
+<body>
+<button class="themebtn" onclick="(function(){var r=document.documentElement;var d=(r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));r.setAttribute('data-theme',d==='dark'?'light':'dark');})()">◐ 테마</button>
+<header class="top">
+  <div class="wrap" style="padding:0;">
+    <h1>BTP Trial 조직도 앱 — 환경·설계·여정</h1>
+    <p>무료 클라우드 ABAP 서버 소개 · 오브젝트 구성 · 만든 순서와 실측 스토리 — RAP 실전 3부작 中 1부</p>
+    <p>대상: RAP을 처음 접하는 ABAP 개발자 &nbsp;|&nbsp; 선수 지식: <span class="pill">08_rap_concept.html</span>의 개념 수준이면 충분</p>
+    <p><span class="badge b-basic">기초</span> 꼭 알아야 할 핵심 &nbsp; <span class="badge b-adv">심화</span> 한 단계 더</p>
+  </div>
+</header>
+<div class="wrap">
+
+<div class="roadmap">
+  <b>3부작 로드맵</b><br>
+  <b>1부(본 문서)</b>: BTP Trial 환경 → 무엇을 만들었나 → 만든 순서와 여정 → 밟았던 지뢰 목록.<br>
+  <b>2부</b> <span class="pill">12_btp_rap_orgchart_code.html</span>: 오브젝트별 코드 한 줄씩 해부.<br>
+  <b>3부</b> <span class="pill">13_btp_rap_orgchart_reality.html</span>: 정석 평가 · 실무 방향 · 이후 작업 · <b>전체 코드 부록</b>.
+</div>
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#env">1부. BTP Trial ABAP Environment — 누구나 쓰는 무료 클라우드 ABAP</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#arch">2부. 무엇을 만들었나 — 테이블 하나, 화면 셋</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#story">3부. 만든 순서와 여정 — 3라운드 스토리</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#mines">4부. 밟았던 지뢰 전체 목록</a> <span class="badge b-adv">심화</span></li>
+  </ol>
+</nav>
+
+<!-- ================= 1부 ================= -->
+<h2 class="sec" id="env">1부. BTP Trial ABAP Environment — 누구나 쓰는 무료 클라우드 ABAP <span class="badge b-basic">기초</span></h2>
+
+<p><b>SAP BTP Trial</b>은 SAP가 무료로 제공하는 클라우드 플랫폼 체험 계정입니다.
+<code>account.hanatrial.ondemand.com</code>에서 누구나 가입할 수 있고, 그 안의
+<b>ABAP Environment</b>(코드명 "Steampunk")가 이 문서의 무대입니다. 부스터(Booster)라는
+자동화 마법사를 한 번 실행하면 서브계정·인스턴스가 만들어지고, Eclipse의
+<b>ADT(ABAP Development Tools)</b>로 접속해 바로 개발을 시작할 수 있습니다.</p>
+
+<h3>1.1 온프렘과 결정적으로 다른 점</h3>
+<table>
+<tr><th>항목</th><th>내용</th></tr>
+<tr><td><b>SAP GUI가 없다</b></td><td>SE80·SE38·SE11 같은 트랜잭션 화면 자체가 존재하지 않습니다. 개발은 전부 ADT, 실행 화면은 전부 Fiori입니다.</td></tr>
+<tr><td><b>클래식 화면 기술이 없다</b></td><td><code>REPORT</code>, <code>CALL SCREEN</code>, ALV Grid는 문법 차원에서 막혀 있습니다. 화면이 있는 앱은 RAP → OData → Fiori Elements 경로가 사실상 유일합니다.</td></tr>
+<tr><td><b>ABAP Cloud 언어 버전 강제</b></td><td>릴리즈된(released) 표준 API만 쓸 수 있고, 표준 테이블 직접 SELECT 등이 활성화 단계에서 차단됩니다. 문법 자체(루프·클래스·CDS)는 아는 ABAP 그대로 — "무엇을 참조할 수 있는가"만 다릅니다.</td></tr>
+<tr><td><b>공유 인스턴스</b></td><td>전 세계 trial 사용자가 한 시스템을 씁니다. 내 오브젝트가 남에게 보이고 편집도 가능합니다. 고유 접두사(이 프로젝트는 <code>ZJMG_</code>)로 충돌을 피하고, 계정정보·업무데이터는 절대 올리지 않습니다.</td></tr>
+<tr><td><b>최대 90일 후 삭제</b></td><td>인스턴스가 소멸합니다. 시스템을 저장소로 믿지 말고 소스를 즉시 로컬 백업해야 합니다. (이 프로젝트 전체 소스는 3부 부록에 전문 수록.)</td></tr>
+</table>
+
+<div class="note"><b>왜 이 환경이 학습에 좋은가</b> — 온프렘 개발 시스템은 "봐주는" 것이 많아 낡은 습관이 통합니다.
+Trial은 S/4HANA Cloud Public Edition과 같은 클린코어 제약(릴리즈 API·언어 버전·Fiori-only UX)을 그대로
+강제하므로, 여기서 익힌 감각은 최신 클라우드 프로젝트에 그대로 이식됩니다. 무료이고, 망가뜨려도 90일 뒤
+사라지니 마음껏 실험할 수 있습니다.</div>
+
+<!-- ================= 2부 ================= -->
+<h2 class="sec" id="arch">2부. 무엇을 만들었나 — 테이블 하나, 화면 셋 <span class="badge b-basic">기초</span></h2>
+
+<p>소재는 <b>조직도</b>입니다. 한 행이 한 사람(노드)이고, <code>parent_id</code>가 자기 테이블의
+다른 행을 가리키는 <b>자기참조 구조</b>라서 트리를 설명하기에 가장 직관적입니다.
+이 테이블 한 장 위에 <b>조회(트리) · 관리(CRUD) · 대량입력(엑셀 업로드)</b> 세 화면을 얹었습니다.</p>
+
+<div class="diagram"><pre>
+                 ┌──────────────────────────────────────────────┐
+                 │  ZJMG_ORG_NODE  (DB 테이블 · 자기참조)          │
+                 │  node_id → parent_id 로 트리 구성               │
+                 └──────────────┬───────────────────────────────┘
+                                │
+                 ┌──────────────▼───────────────────────────────┐
+                 │  ZR_JMG_ORG_NODE  (RAP 루트 뷰 + BDEF + 클래스)│
+                 │  managed · draft · validation · mapping       │
+                 └───┬──────────────────┬───────────────────────┘
+       source        │                  │ projection
+ ┌───────────────────▼──┐   ┌───────────▼──────────┐   ┌────────────────────────┐
+ │ ZI_JMG_ORG_HIER      │   │ ZC_JMG_ORG_TREE      │   │ ZC_JMG_ORG_MAINT       │
+ │ (CDS Hierarchy 정의) │◄──│ 조회 전용 소비뷰      │   │ CRUD 소비뷰 (draft)     │
+ └──────────────────────┘   │ @…recursiveHierarchy │   │ +ZI_JMG_ORG_VH 값도움말 │
+                            └───────────┬──────────┘   └───────────┬────────────┘
+                                        │                          │
+                            ┌───────────▼──────────┐   ┌───────────▼────────────┐
+                            │ ZUI_JMG_ORG_TREE_O4  │   │ ZUI_JMG_ORG_MAINT_O4   │
+                            │ (서비스 정의+바인딩)  │   │ OrgMaint + OrgUpload   │
+                            └───────────┬──────────┘   └───────────┬────────────┘
+                                        │                          │
+                              Fiori 트리 테이블            Fiori List Report ×2
+                              (조회 전용)                  (CRUD · 엑셀 업로드)
+
+ 별동대: ZR/ZC_JMG_ORG_UPLD (엑셀 파일 업로드 BO) ──파싱 후──▶ ZR_JMG_ORG_NODE (EML)
+</pre></div>
+
+<h3>2.1 오브젝트 인벤토리 — 전부 패키지 <code>ZJMG_ORG_TREE</code></h3>
+<table>
+<tr><th>계층</th><th>오브젝트</th><th>타입</th><th>역할</th></tr>
+<tr><td>기반</td><td><code>ZJMG_ORG_NODE_ID / _NAME / _TITLE</code></td><td>DTEL</td><td>필드 타입·라벨 (CHAR10/40/40)</td></tr>
+<tr><td>기반</td><td><code>ZJMG_ORG_NODE</code></td><td>TABL</td><td>실제 저장소. node_id(키)+parent_id 자기참조</td></tr>
+<tr><td>기반</td><td><code>ZJMG_ORG_NODE_D</code></td><td>TABL</td><td>드래프트 테이블 (편집 임시본 저장)</td></tr>
+<tr><td>기반</td><td><code>ZJMG_ORG_MSG</code></td><td>MSAG</td><td>검증 오류 메시지 (001 자기참조 · 002 부모없음)</td></tr>
+<tr><td>기반</td><td><code>ZCL_JMG_ORG_DATA_LOAD</code></td><td>CLAS</td><td>더미 조직도 6명 적재용 콘솔 클래스</td></tr>
+<tr><td>RAP 코어</td><td><code>ZR_JMG_ORG_NODE</code></td><td>DDLS</td><td>루트 뷰 — 모든 소비뷰의 단일 원천</td></tr>
+<tr><td>RAP 코어</td><td><code>ZR_JMG_ORG_NODE</code></td><td>BDEF</td><td>행동 정의 — managed+draft, CRUD, 검증 2종, mapping</td></tr>
+<tr><td>RAP 코어</td><td><code>ZBP_R_JMG_ORG_NODE</code></td><td>CLAS</td><td>행동 구현 — 검증·권한 핸들러</td></tr>
+<tr><td>조회(트리)</td><td><code>ZI_JMG_ORG_HIER</code></td><td>DDLS</td><td>CDS Hierarchy 정의 — 트리 구조 선언</td></tr>
+<tr><td>조회(트리)</td><td><code>ZC_JMG_ORG_TREE</code> (+BDEF)</td><td>DDLS/BDEF</td><td>조회 전용 소비뷰 — 트리 어노테이션 보유</td></tr>
+<tr><td>조회(트리)</td><td><code>ZUI_JMG_ORG_TREE_O4</code></td><td>SRVD+SRVB</td><td>OData V4 UI 서비스 (게시 완료)</td></tr>
+<tr><td>관리(CRUD)</td><td><code>ZC_JMG_ORG_MAINT</code> (+BDEF)</td><td>DDLS/BDEF</td><td>CRUD 소비뷰 — draft, UI 어노테이션, 값도움말</td></tr>
+<tr><td>관리(CRUD)</td><td><code>ZI_JMG_ORG_VH</code></td><td>DDLS</td><td>ParentID 값도움말 전용 뷰</td></tr>
+<tr><td>업로드</td><td><code>ZJMG_ORG_UPLD / _D</code></td><td>TABL</td><td>엑셀 파일 저장 테이블(+드래프트)</td></tr>
+<tr><td>업로드</td><td><code>ZR/ZC_JMG_ORG_UPLD</code> (+BDEF×2)</td><td>DDLS/BDEF</td><td>파일 업로드 BO — largeObject + processUpload 액션</td></tr>
+<tr><td>업로드</td><td><code>ZBP_R_JMG_ORG_UPLD</code></td><td>CLAS</td><td>XCO XLSX 파싱 + cross-BO EML 노드 생성</td></tr>
+<tr><td>서비스</td><td><code>ZUI_JMG_ORG_MAINT_O4</code></td><td>SRVD+SRVB</td><td>OrgMaint + OrgUpload 두 엔티티 노출 (게시 완료)</td></tr>
+</table>
+
+<div class="note"><b>네이밍이 곧 설계다</b> — <code>ZR_</code>(루트/기반) → <code>ZC_</code>(소비/화면) →
+<code>ZI_</code>(재사용 인터페이스·값도움말), <code>ZBP_</code>(행동 구현), <code>ZUI_…_O4</code>(OData V4 UI 서비스).
+SAP VDM/RAP 마법사가 쓰는 표준 접두사에 개인 식별자 <code>JMG</code>를 붙인 형태입니다.
+이름만 보고 계층과 역할이 읽히는 것 — 이것이 관례를 따르는 실익입니다.</div>
+
+<!-- ================= 3부 ================= -->
+<h2 class="sec" id="story">3부. 만든 순서와 여정 — 3라운드 스토리 <span class="badge b-basic">기초</span></h2>
+
+<p>아래 순서는 "이론상 순서"가 아니라 <b>실제로 만들면서 확정된 순서</b>입니다.
+각 단계의 산출물이 다음 단계의 전제가 됩니다.</p>
+
+<h3>3.1 — 1라운드: 조회 (CDS Hierarchy 트리)</h3>
+
+<h4>① 데이터 엘리먼트 → 테이블 → 더미 데이터</h4>
+<p>DTEL 3종을 만들고 <code>ZJMG_ORG_NODE</code> 테이블을 정의했습니다. 테이블 DDL에는
+<code>@AbapCatalog.enhancement.category</code>가 <b>사실상 필수</b> — 빼면 체크는 통과하는데
+저장이 거부되는 함정이 있습니다. 데이터는 <code>if_oo_adt_classrun</code> 클래스
+(<code>ZCL_JMG_ORG_DATA_LOAD</code>)로 CEO 1명·매니저 2명·팀원 3명을 적재했습니다.
+GUI가 없으니 SE16으로 넣을 수 없고, 이 "콘솔 클래스" 패턴이 이 환경의 SE38 대용입니다.</p>
+
+<h4>② 루트 뷰 + 최소 BDEF</h4>
+<p><code>ZR_JMG_ORG_NODE</code>를 테이블에서 직접 정의했습니다(자기참조 association
+<code>_Parent</code> 포함). 첫 교훈: <b>루트 뷰는 인터페이스 뷰를 프로젝션해서 만들 수 없습니다</b>
+(ROOT 속성이 전파되지 않음). 또 트리 어노테이션이 요구하는
+<code>provider contract transactional_query</code>는 <b>활성화된 Behavior Definition이 있는 루트</b>를
+전제합니다 — 그래서 "조회 전용인데도" BDEF가 필요했습니다.</p>
+
+<h4>③ CDS Hierarchy 정의</h4>
+<p><code>ZI_JMG_ORG_HIER</code> — <code>define hierarchy</code>로 부모·자식 관계를 선언합니다.
+문법 함정 둘: <code>multiple parents <b>not allowed</b></code>(× allowed false)이고,
+본문 요소에는 소비뷰와 동일하게 <code>key</code> 표시가 필요했습니다. 이 오브젝트가 바로
+온프렘(UI5 1.96)에서는 만들어도 그려줄 렌더러가 없어 보류됐던 지점입니다 —
+트리 테이블 렌더링은 2311+ 클라우드 릴리즈부터라 Trial에서만 완주할 수 있었습니다.</p>
+
+<h4>④ 소비 뷰 + 서비스 + 게시</h4>
+<p><code>ZC_JMG_ORG_TREE</code>에 <code>@OData.hierarchy.recursiveHierarchy</code>로 계층 정의를 연결하고
+서비스 정의/바인딩(OData V4 UI)을 만들어 게시했습니다. <b>Hierarchy의 source와 소비뷰의 프로젝션 계보는
+같은 뷰여야 합니다</b> — 어기면 활성화는 통과하는데 Preview에서만 오류가 납니다.
+(중요 교훈: <b>"활성화 성공 ≠ 소비 가능"</b>.) Eclipse에서 서비스 바인딩 더블클릭 → Preview로
+트리 렌더링을 확인했습니다.</p>
+
+<h3>3.2 — 2라운드: 관리 (CRUD 화면)</h3>
+
+<h4>① 메시지 클래스 + CRUD 소비뷰</h4>
+<p><code>ZJMG_ORG_MSG</code>(오류 문구 2건)와 <code>ZC_JMG_ORG_MAINT</code>(List Report/Object Page용
+UI 어노테이션 세트)를 생성. <code>@UI.facet</code>은 이 시스템에서 <b>키 필드의 첫 인라인 어노테이션</b>
+위치만 허용됩니다 — DDLX 메타데이터 익스텐션은 wrong-scope로 거부(온프렘과 동일 실측).</p>
+
+<h4>② 검증 로직 — validation</h4>
+<p>루트 BDEF에 <code>validation checkSelfParent</code>(자기 자신을 부모로 금지)를 선언하고
+구현 클래스의 로컬 핸들러(<code>lhc_</code>)에 구현했습니다. 이후 <code>checkParentExists</code>
+(존재하지 않는 부모 금지)와 필수 입력(<code>mandatory : create</code> NodeID,
+<code>mandatory</code> OrgName)을 추가했습니다.</p>
+
+<h4>③ Create 버튼이 없다 → 드래프트 전환</h4>
+<p>가장 큰 반전. 백엔드 CRUD가 완벽해도 <b>OData V4 UI + List Report 조합에서 비(非)드래프트면
+표준 Create 버튼 자체가 안 뜹니다.</b> 결국 드래프트 테이블(<code>ZJMG_ORG_NODE_D</code>)을 만들고
+BDEF를 <code>with draft</code>로 전환했습니다. 드래프트 테이블의 필드명은 <b>CDS 요소명(CamelCase)과
+동일</b>해야 하며, 프로젝션 BDEF에도 <code>use draft;</code>가 있어야 버튼이 나타납니다.</p>
+
+<h4>④ 저장했는데 빈 행 → mapping for</h4>
+<p>첫 생성 테스트에서 값이 전부 빠진 빈 행이 들어갔습니다. 원인은 managed BO에서
+CDS 요소명(<code>NodeID</code>)≠DB 컬럼명(<code>node_id</code>)일 때 <b><code>mapping for</code> 절이
+필수</b>라는 것 — 없으면 오류 없이 조용히 빈 값이 저장됩니다. 가장 찾기 어려운 종류의 버그입니다.</p>
+
+<h4>⑤ READ에서 덤프 → 권한 핸들러 구현</h4>
+<p><code>authorization master (instance)</code>를 선언만 하고 핸들러를 안 만들면
+조회만 해도 런타임 덤프(<code>Handler not implemented: INSTANCE_AUTHORIZATION</code>)가 납니다.
+활성화 때는 경고(W)로만 지나가서 무시하기 쉽습니다. all-allow 스텁으로라도
+<code>get_global/get_instance_authorizations</code>를 구현해 해결했습니다.</p>
+
+<h4>⑥ 값도움말 다듬기</h4>
+<p>ParentID에 F4를 붙이되, 전용 값도움말 뷰 <code>ZI_JMG_ORG_VH</code>를 분리해 연결했습니다
+(드래프트 엔티티 자신을 VH 소스로 쓰면 안 뜨는 경우가 있음). 드롭다운이 아니라 팝업 다이얼로그로
+나오게 하려면 <code>@ObjectModel.resultSet.sizeCategory: #XS</code>를 <b>빼야</b> 합니다 —
+이 어노테이션이 "작은 목록"으로 선언해 드롭다운으로 최적화해버립니다.</p>
+
+<h3>3.3 — 3라운드: 대량입력 (엑셀 업로드)</h3>
+
+<h4>① 충격적 사실: FE에 표준 업로드 버튼이 없다</h4>
+<p>Excel <b>Export</b>는 표준이지만 <b>Import는 Fiori Elements 표준 기능이 아예 아닙니다</b>
+(버전 무관). 그래서 SAP 공식 블로그가 안내하는 패턴을 그대로 채택했습니다: 파일 첨부 필드를 가진
+<b>업로드 전용 BO</b>를 만들고 백엔드에서 파싱합니다.</p>
+
+<h4>② 업로드 BO — largeObject</h4>
+<p><code>ZJMG_ORG_UPLD</code>(+드래프트) 테이블과 <code>ZR/ZC_JMG_ORG_UPLD</code> 스택.
+핵심은 <code>@Semantics.largeObject</code> — 이 어노테이션이 붙은 필드는 Object Page에
+<b>파일 업로더 컨트롤</b>로 자동 렌더링됩니다. 키는 <code>numbering : managed</code>로
+UUID 자동 채번.</p>
+
+<h4>③ processUpload 액션 — XCO 파싱 + cross-BO EML</h4>
+<p>사용자가 파일을 저장한 뒤 "Process Upload" 버튼(액션)을 누르면, <code>XCO_CP_XLSX</code>
+모듈로 엑셀을 읽어(A~D열, 2행부터) <b>EML로 노드 BO에 CREATE</b>합니다. DB에 직접 INSERT하지 않고
+EML을 타는 것이 핵심 — <b>자기참조 금지·부모 존재 검증이 업로드 경로에도 그대로 작동</b>합니다.
+실전 테스트에서 셀 앞 공백 때문에 "부모 없음" 검증에 걸리는 실제 상황까지 겪었고,
+파싱 직후 <code>CONDENSE</code>로 공백을 정리하는 방어 코드를 넣었습니다.</p>
+
+<!-- ================= 4부 ================= -->
+<h2 class="sec" id="mines">4부. 밟았던 지뢰 전체 목록 <span class="badge b-adv">심화</span></h2>
+
+<p>전부 이 시스템에서 실제로 부딪히고 실측으로 확정한 것들입니다.
+같은 길을 걷는 사람의 시간을 아끼기 위해 남깁니다.</p>
+
+<table>
+<tr><th style="width:36%">증상</th><th>원인 / 해법</th></tr>
+<tr><td>테이블 저장 거부 (체크는 통과)</td><td><code>@AbapCatalog.enhancement.category</code> 누락 → 항상 포함</td></tr>
+<tr><td>Create 버튼이 안 뜸</td><td>V4 UI + List Report는 draft 전제 → <code>with draft</code> 전환 + 프로젝션 BDEF에 <code>use draft;</code></td></tr>
+<tr><td>저장했는데 모든 필드가 빈 행</td><td>managed BO에 <code>mapping for</code> 누락 (CDS명≠DB명) → mapping 절 필수</td></tr>
+<tr><td>조회만 해도 덤프 (INSTANCE_AUTHORIZATION)</td><td><code>authorization master(instance)</code> 선언 후 핸들러 미구현 → all-allow라도 구현</td></tr>
+<tr><td>Preview: hierarchy source 불일치 오류</td><td>Hierarchy의 source와 소비뷰 프로젝션 계보가 다른 뷰 → 같은 루트로 통일</td></tr>
+<tr><td>Preview: primary key 불일치 오류</td><td>Hierarchy 본문에 <code>key</code> 표시 누락 → 소비뷰와 동일한 키 구조로</td></tr>
+<tr><td>드래프트 테이블 활성화 거부</td><td>필드명은 CDS 요소명(CamelCase)과 동일, 비즈니스 키 BO엔 draftuuid 키 금지, admin include는 <code>sych_bdl_draft_admin_inc</code></td></tr>
+<tr><td><code>@UI.facet</code> wrong-scope 오류</td><td>헤더/DDLX 위치 거부 → <b>키 필드의 첫 인라인 어노테이션</b>으로</td></tr>
+<tr><td>값도움말이 드롭다운으로 나옴</td><td><code>@ObjectModel.resultSet.sizeCategory:#XS</code> 제거 → 팝업 다이얼로그</td></tr>
+<tr><td>프로젝션 BDEF에서 <code>use validation</code> 오류</td><td>그런 문법 없음 — validation은 자동 적용. draft 액션만 <code>use action …</code>으로 노출</td></tr>
+<tr><td>업로드한 행이 안 들어옴</td><td>엑셀 셀의 앞뒤 공백 → 파싱 후 <code>CONDENSE</code>(ID는 NO-GAPS) 필수</td></tr>
+<tr><td>게시했는데 외부 curl은 403</td><td>UCON(Unified Connectivity) 화이트리스트가 외부 호출 차단 — Eclipse Preview는 통과</td></tr>
+</table>
+
+<div class="note"><b>이 여정의 스코어</b> — 테이블 1 · 화면 3 · 오브젝트 21.
+조회는 트리로, 관리는 드래프트 CRUD로, 대량입력은 엑셀 업로드로.
+2부에서 이 오브젝트들의 코드를 한 줄씩 해부합니다.</div>
+
+<footer>
+RAP 실전 3부작 — 1부(본 문서) · 2부 <span class="pill">12_btp_rap_orgchart_code.html</span> · 3부 <span class="pill">13_btp_rap_orgchart_reality.html</span><br>
+BTP Trial ABAP Environment (TRL) · 패키지 ZJMG_ORG_TREE · 2026-07 실측 기준
+</footer>
+</div>
+</body>
+</html>
