@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTP Trial 조직도 앱 — 정석과 현실, 다음 단계 + 전체 코드 (RAP 실전 3부작 中 3부)</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --basic-bg:#dafbe1; --basic-fg:#116329; --adv-bg:#fff1e5; --adv-fg:#953800;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --basic-bg:#12261e; --basic-fg:#3fb950; --adv-bg:#2d1e12; --adv-fg:#db8b4c;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --card:#161b22; --code-bg:#161b22; --code-fg:#e6edf3; --accent:#4493f8;
+      --basic-bg:#12261e; --basic-fg:#3fb950; --adv-bg:#2d1e12; --adv-fg:#db8b4c;
+      --th:#21262d; --kw:#ff7b72; --str:#a5d6ff; --com:#8b949e;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --border:#d0d7de;
+    --card:#f6f8fa; --code-bg:#f6f8fa; --code-fg:#24292f; --accent:#0969da;
+    --basic-bg:#dafbe1; --basic-fg:#116329; --adv-bg:#fff1e5; --adv-fg:#953800;
+    --th:#eaeef2; --kw:#cf222e; --str:#0a3069; --com:#6e7781;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","맑은 고딕",sans-serif;
+    line-height:1.75;font-size:16px;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 120px;}
+  header.top{padding:48px 20px 32px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  header.top h1{font-size:2rem;margin:0 0 8px;}
+  header.top p{color:var(--muted);margin:4px 0;}
+  nav.toc{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:18px 22px;margin:28px 0;}
+  nav.toc h2{font-size:1rem;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  nav.toc ol{margin:0;padding-left:22px;}
+  nav.toc a{color:var(--accent);text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+  h2.sec{font-size:1.5rem;margin:56px 0 8px;padding-top:12px;border-top:2px solid var(--border);}
+  h3{font-size:1.18rem;margin:32px 0 6px;}
+  h4{font-size:1.02rem;margin:22px 0 4px;}
+  p{margin:10px 0;}
+  code{background:var(--code-bg);border:1px solid var(--border);border-radius:5px;
+    padding:1px 5px;font-family:"SF Mono",Consolas,"Courier New",monospace;font-size:.88em;}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;
+    padding:14px 16px;overflow-x:auto;margin:14px 0;}
+  pre code{background:none;border:none;padding:0;font-size:.85rem;line-height:1.6;color:var(--code-fg);}
+  .badge{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:20px;
+    vertical-align:middle;margin-left:8px;letter-spacing:.02em;}
+  .b-basic{background:var(--basic-bg);color:var(--basic-fg);}
+  .b-adv{background:var(--adv-bg);color:var(--adv-fg);}
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:.9rem;display:block;overflow-x:auto;}
+  th,td{border:1px solid var(--border);padding:7px 11px;text-align:left;vertical-align:top;}
+  th{background:var(--th);font-weight:600;}
+  .note{background:var(--card);border-left:4px solid var(--accent);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:16px 0;}
+  .note b{color:var(--accent);}
+  .pill{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:6px;
+    padding:1px 8px;font-size:.82rem;font-family:monospace;}
+  .themebtn{position:fixed;top:14px;right:14px;background:var(--card);color:var(--fg);
+    border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.85rem;z-index:10;}
+  footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:.85rem;}
+  .roadmap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin:20px 0;}
+  .roadmap b{color:var(--accent);}
+  .srcTitle{font-weight:700;margin:26px 0 4px;font-size:1rem;}
+  .srcTitle .pill{margin-left:8px;}
+</style>
+</head>
+<body>
+<button class="themebtn" onclick="(function(){var r=document.documentElement;var d=(r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));r.setAttribute('data-theme',d==='dark'?'light':'dark');})()">◐ 테마</button>
+<header class="top">
+  <div class="wrap" style="padding:0;">
+    <h1>BTP Trial 조직도 앱 — 정석과 현실, 다음 단계</h1>
+    <p>얼마나 표준인가 · 무엇이 부족한가 · 실무는 어떻게 하는가 · 이후 작업 · 전체 코드 부록 — RAP 실전 3부작 中 3부</p>
+    <p>선행: <span class="pill">11_btp_rap_orgchart_build.html</span> · <span class="pill">12_btp_rap_orgchart_code.html</span></p>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#canon">1부. 이 구성은 얼마나 "정석"인가</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#gaps">2부. 데모라서 눈감은 곳 + 플랫폼 한계</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#field">3부. 실무의 기대, 실무의 구성</a> <span class="badge b-basic">기초</span></li>
+    <li><a href="#next">4부. 이후 작업 — 구체적으로</a> <span class="badge b-adv">심화</span></li>
+    <li><a href="#appendix">부록. 전체 코드 (오브젝트 21종)</a> <span class="badge b-adv">심화</span></li>
+  </ol>
+</nav>
+
+<!-- ================= 1부 ================= -->
+<h2 class="sec" id="canon">1부. 이 구성은 얼마나 "정석"인가 <span class="badge b-basic">기초</span></h2>
+
+<p><b>결론: 골격은 SAP 공식 튜토리얼이 가르치는 표준 패턴 그대로입니다.</b></p>
+<ul>
+<li><b>계층 구조</b> — 루트(ZR_) 하나에 용도별 소비뷰(ZC_)를 여럿 얹는 "R→C 다중 프로젝션"은
+RAP 마법사가 자동 생성하는 바로 그 구조입니다. 조회 서비스와 관리 서비스를 분리한 것,
+값도움말을 전용 뷰(ZI_…_VH)로 뺀 것도 관례 그대로.</li>
+<li><b>managed + draft</b> — S/4HANA Cloud의 표준 앱들이 실제로 이 조합으로 만들어져 있습니다.
+비드래프트를 고집하다 Create 버튼 없는 화면을 만난 것 자체가 "왜 표준이 draft인가"의 답이었습니다.</li>
+<li><b>검증의 위치</b> — 규칙 선언은 BDEF, 구현은 핸들러, 메시지는 T100 메시지 클래스.
+UI에서도 막고(값도움말) 저장에서도 막는(validation) 이중 방어까지 포함해 교과서적 배치입니다.</li>
+<li><b>엑셀 업로드 패턴</b> — largeObject 파일 BO + XCO XLSX + cross-BO EML은 SAP 공식 블로그가
+BTP ABAP 환경용으로 안내하는 그 패턴입니다. 특히 <b>EML로 넣어 검증이 우회되지 않게 한 것</b>은
+실무에서도 그대로 칭찬받을 선택입니다.</li>
+<li><b>VDM/네이밍</b> — 단일 테이블·단일 소비 시나리오라 I_ 인터페이스 계층은 일부러 넣지 않았습니다
+(과설계 회피). I_가 필요해지는 건 "여러 소비자가 같은 조인/계산 로직을 재사용할 때"부터입니다.</li>
+</ul>
+
+<!-- ================= 2부 ================= -->
+<h2 class="sec" id="gaps">2부. 데모라서 눈감은 곳 + 플랫폼 한계 <span class="badge b-basic">기초</span></h2>
+
+<h3>2.1 실무 프로젝트였다면 리뷰에서 지적됐을 것들</h3>
+<table>
+<tr><th style="width:22%">항목</th><th>데모의 현재</th><th>실무의 정석</th></tr>
+<tr><td>권한</td><td>all-allow 스텁 (전부 허용)</td><td>권한 오브젝트 정의 + <code>AUTHORITY-CHECK</code> 실구현, IAM 앱/비즈니스 카탈로그로 역할 배포</td></tr>
+<tr><td>테스트</td><td>없음</td><td>validation·액션 로직에 ABAP Unit (EML 테스트 더블/BO 테스트 프레임워크)</td></tr>
+<tr><td>다국어</td><td>라벨 하드코딩(영어)</td><td>데이터 엘리먼트 라벨·메시지 클래스 번역으로 다국어 처리</td></tr>
+<tr><td>업로드 결과 보고</td><td>"N건 성공 / 실패 있음" 요약</td><td>행 단위 오류 목록(몇 행이 왜 실패했는지) — 별도 결과 엔티티나 로그로</td></tr>
+<tr><td>중복 업로드</td><td>재실행하면 중복 키 오류</td><td>기존 키 UPDATE(멱등 업서트) 또는 명시적 모드 선택(신규만/덮어쓰기)</td></tr>
+<tr><td>다단계 순환참조</td><td>자기 자신만 차단 (A→B→A는 허용)</td><td>계층 SQL이나 재귀 검사로 순환 전체 차단</td></tr>
+<tr><td>전송</td><td>로컬 패키지 (trial 제약)</td><td>정식 소프트웨어 컴포넌트 + gCTS 전송 트랙</td></tr>
+</table>
+
+<h3>2.2 플랫폼 자체의 한계 — 우리가 어쩔 수 없던 것</h3>
+<ul>
+<li><b>FE V4에 표준 엑셀 Import가 없다.</b> Export는 표준, Import는 지금도 커스텀의 영역.
+그래서 업로드 BO 패턴이 "우회"가 아니라 "현재의 표준 답"입니다.</li>
+<li><b>비드래프트 V4 UI에는 Create/Edit UX가 없다</b> — 백엔드 능력과 무관한 프런트 정책입니다.</li>
+<li><b>ADT Preview는 런치패드가 아니다</b> — 앱 간 이동(IBN), 화면 통합, 커스텀 툴바 버튼은
+Preview 밖(정식 배포)의 세계입니다.</li>
+<li><b>Trial 특성</b> — 공유 인스턴스(오브젝트 공개), UCON의 외부 API 차단, 90일 소멸.
+학습엔 사소하지만 "여기 있는 건 언제든 사라진다"는 전제는 항상 유효합니다.</li>
+</ul>
+
+<!-- ================= 3부 ================= -->
+<h2 class="sec" id="field">3부. 실무의 기대, 실무의 구성 <span class="badge b-basic">기초</span></h2>
+
+<p>"SAP GUI 시절엔 한 화면에서 다 됐는데요?" — 반드시 듣게 될 그 말에 대하여.</p>
+
+<p>GUI 세대 사용자의 기대는 명확합니다: <b>조회하다가 그 화면에서 바로 고치고, 같은 화면의 버튼으로
+엑셀을 올리는 것.</b> ALV Grid + 업로드 버튼으로 20년을 살아온 사용자에게 "조회 앱 따로,
+관리 앱 따로, 업로드 앱 따로"는 퇴보로 보입니다. 이 갈등은 S/4 전환 프로젝트의 단골 쟁점이고,
+업계의 현실적인 대응은 세 갈래입니다.</p>
+
+<table>
+<tr><th style="width:20%">전략</th><th>내용</th><th>비용/비고</th></tr>
+<tr><td><b>① 커스텀 Fiori 앱</b></td>
+  <td>BAS(Business Application Studio)에서 Fiori Elements 앱을 정식 생성, 컨트롤러 익스텐션으로
+  List Report 툴바에 업로드 버튼 삽입 — 오픈소스 <b>UI5 Spreadsheet Importer</b>가 사실상의
+  커뮤니티 표준. 사용자 기대에 가장 근접.</td>
+  <td>프런트 개발·배포 파이프라인 필요. RAP 백엔드는 지금 것 그대로 재사용</td></tr>
+<tr><td><b>② 표준 UX 설득</b></td>
+  <td>"업로드는 업로드 앱, 관리는 관리 앱"이라는 Fiori 철학대로 가고 사용자를 교육.
+  클린코어 관점에선 가장 순수.</td>
+  <td>개발비 0, 변화관리 비용은 최대. 사용자 만족도 리스크</td></tr>
+<tr><td><b>③ IBN 절충</b></td>
+  <td>앱은 분리하되 Intent-Based Navigation 버튼으로 한 클릭 이동(조회→관리→업로드).
+  런치패드의 Semantic Object 타겟 매핑으로 구현.</td>
+  <td>어노테이션+런치패드 설정 수준. 단 Preview에선 동작 안 함(런치패드 필요)</td></tr>
+</table>
+
+<div class="note"><b>실무 구성 예시를 하나로 그리면</b> — 백엔드는 지금 만든 RAP 스택 그대로
+(루트+검증+업로드 BO), 그 위에 BAS로 만든 Fiori 앱 하나가 List Report(트리 or 목록)를 메인으로 삼고,
+툴바에 Spreadsheet Importer 업로드 버튼 + IBN 상세 이동을 얹습니다. 권한은 IAM 앱·비즈니스 카탈로그로
+역할화하고, 전송은 gCTS 트랙을 탑니다. 즉 <b>이번에 만든 것은 버려지는 연습작이 아니라,
+실무 구성의 백엔드 절반이 이미 완성된 상태</b>입니다.</div>
+
+<!-- ================= 4부 ================= -->
+<h2 class="sec" id="next">4부. 이후 작업 — 구체적으로 <span class="badge b-adv">심화</span></h2>
+
+<ol>
+<li><b>BAS Fiori 앱 프로젝트 (다음 라운드의 본론).</b> Trial의 Business Application Studio 구독을 켜고
+지금 서비스(<code>ZUI_JMG_ORG_MAINT_O4</code>)를 소비하는 List Report 앱 생성 →
+① 트리 화면의 manifest에 <code>type: "TreeTable"</code> + <code>hierarchyQualifier</code>를 넣어
+정식 트리 테이블 구성 ② Spreadsheet Importer로 툴바 업로드 버튼 ③ Semantic Object 등록 후
+조회→관리→업로드 IBN 버튼 연결. 이번에 Preview 한계로 미룬 UX 세 가지가 전부 여기서 풀립니다.</li>
+<li><b>권한 실구현.</b> all-allow 스텁을 걷어내고 권한 오브젝트 + AUTHORITY-CHECK, IAM 앱 구성까지.
+RAP 권한 3종(global/instance/precheck)을 한 번씩 실습하기 좋은 소재입니다.</li>
+<li><b>업로드 고도화.</b> 행 단위 오류 리포트(결과 로그 엔티티), 멱등 업서트 모드,
+템플릿 파일 다운로드 액션.</li>
+<li><b>순환참조 완전 차단.</b> <code>SELECT … FROM HIERARCHY</code>로 조상 목록을 얻어
+"새 부모가 내 자손이면 거부"를 validation에 추가 — CDS Hierarchy를 검증 로직에 재사용하는
+좋은 연습이 됩니다.</li>
+<li><b>ABAP Unit.</b> validation 두 개부터 테스트 클래스를 붙여 RAP 테스트 프레임워크 입문.</li>
+<li><b>90일 대비 재생성 리허설.</b> 인스턴스가 사라졌다 치고, 아래 부록의 소스만으로 새 trial에
+전체 스택을 다시 세워보기 — 백업의 완전성을 증명하는 가장 확실한 방법입니다.</li>
+</ol>
+
+<!-- ================= 부록 ================= -->
+<h2 class="sec" id="appendix">부록. 전체 코드 — 패키지 ZJMG_ORG_TREE, 활성본 기준 <span class="badge b-adv">심화</span></h2>
+
+<p>이 부록만으로 전체 스택을 재구축할 수 있습니다. 로컬 백업 위치: <span class="pill">btp-trial/src/org-tree/</span></p>
+
+<h3>A. 기반 오브젝트</h3>
+
+<p class="srcTitle">A-1 · 데이터 엘리먼트 3종 <span class="pill">DTEL</span> — ADT 폼 기반이라 소스 대신 정의표</p>
+<table>
+<tr><th>이름</th><th>타입</th><th>라벨</th></tr>
+<tr><td><code>ZJMG_ORG_NODE_ID</code></td><td>CHAR 10</td><td>Node ID</td></tr>
+<tr><td><code>ZJMG_ORG_NAME</code></td><td>CHAR 40</td><td>Name</td></tr>
+<tr><td><code>ZJMG_ORG_TITLE</code></td><td>CHAR 40</td><td>Job Title</td></tr>
+</table>
+
+<p class="srcTitle">A-2 · ZJMG_ORG_NODE <span class="pill">TABL</span></p>
+<pre><code>@EndUserText.label : 'Org Chart Node (JMG demo)'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+define table zjmg_org_node {
+  key client      : abap.clnt not null;
+  key node_id     : zjmg_org_node_id not null;
+  parent_id       : zjmg_org_node_id;
+  org_name        : zjmg_org_name;
+  job_title       : zjmg_org_title;
+  last_changed_at : timestampl;
+}</code></pre>
+
+<p class="srcTitle">A-3 · ZJMG_ORG_NODE_D <span class="pill">TABL</span> — 드래프트</p>
+<pre><code>@EndUserText.label : 'Org Chart Node (Draft)'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+define table zjmg_org_node_d {
+  key client    : abap.clnt not null;
+  key NodeID    : zjmg_org_node_id not null;
+  ParentID      : zjmg_org_node_id;
+  OrgName       : zjmg_org_name;
+  JobTitle      : zjmg_org_title;
+  LastChangedAt : timestampl;
+  "~min" : include sych_bdl_draft_admin_inc;
+}</code></pre>
+
+<p class="srcTitle">A-4 · ZJMG_ORG_MSG <span class="pill">MSAG</span></p>
+<table>
+<tr><th>번호</th><th>텍스트</th></tr>
+<tr><td>001</td><td><code>Node &amp; cannot be its own parent</code></td></tr>
+<tr><td>002</td><td><code>Parent node &amp; does not exist</code></td></tr>
+</table>
+
+<p class="srcTitle">A-5 · ZCL_JMG_ORG_DATA_LOAD <span class="pill">CLAS</span> — 더미 데이터 적재</p>
+<pre><code>CLASS zcl_jmg_org_data_load DEFINITION
+  PUBLIC FINAL CREATE PUBLIC.
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+ENDCLASS.
+
+CLASS zcl_jmg_org_data_load IMPLEMENTATION.
+  METHOD if_oo_adt_classrun~main.
+    DATA lt_node TYPE STANDARD TABLE OF zjmg_org_node WITH EMPTY KEY.
+
+    lt_node = VALUE #(
+      ( node_id = 'CEO001' parent_id = ''       org_name = 'Alex Kim'    job_title = 'CEO' )
+      ( node_id = 'MGR001' parent_id = 'CEO001' org_name = 'Jordan Lee'  job_title = 'Engineering Manager' )
+      ( node_id = 'MGR002' parent_id = 'CEO001' org_name = 'Sam Park'    job_title = 'Sales Manager' )
+      ( node_id = 'EMP001' parent_id = 'MGR001' org_name = 'Taylor Kim'  job_title = 'Software Engineer' )
+      ( node_id = 'EMP002' parent_id = 'MGR001' org_name = 'Morgan Choi' job_title = 'QA Engineer' )
+      ( node_id = 'EMP003' parent_id = 'MGR002' org_name = 'Casey Yoon'  job_title = 'Sales Rep' )
+    ).
+
+    MODIFY zjmg_org_node FROM TABLE @lt_node.
+
+    IF sy-subrc = 0.
+      COMMIT WORK.
+      out-&gt;write( |Inserted { lines( lt_node ) } org node rows| ).
+    ELSE.
+      out-&gt;write( 'Insert failed' ).
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.</code></pre>
+
+<h3>B. RAP 코어 (노드 BO)</h3>
+
+<p class="srcTitle">B-1 · ZR_JMG_ORG_NODE <span class="pill">DDLS</span> — 루트 뷰</p>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Org Chart Node (Root)'
+define root view entity ZR_JMG_ORG_NODE
+  as select from zjmg_org_node
+  association [0..1] to ZR_JMG_ORG_NODE as _Parent
+    on $projection.ParentID = _Parent.NodeID
+{
+  key node_id         as NodeID,
+      parent_id       as ParentID,
+      org_name        as OrgName,
+      job_title       as JobTitle,
+      last_changed_at as LastChangedAt,
+      _Parent
+}</code></pre>
+
+<p class="srcTitle">B-2 · ZR_JMG_ORG_NODE <span class="pill">BDEF</span></p>
+<pre><code>managed implementation in class zbp_r_jmg_org_node unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZR_JMG_ORG_NODE
+persistent table zjmg_org_node
+draft table zjmg_org_node_d
+lock master
+total etag LastChangedAt
+authorization master ( instance )
+{
+  create ( authorization : global );
+  update;
+  delete;
+
+  draft action Activate;
+  draft action Discard;
+  draft action Edit;
+  draft action Resume;
+  draft determine action Prepare;
+
+  field ( readonly : update, mandatory : create ) NodeID;
+  field ( mandatory ) OrgName;
+
+  association _Parent;
+
+  validation checkSelfParent on save { field ParentID; }
+  validation checkParentExists on save { field ParentID; }
+
+  mapping for zjmg_org_node
+  {
+    NodeID        = node_id;
+    ParentID      = parent_id;
+    OrgName       = org_name;
+    JobTitle      = job_title;
+    LastChangedAt = last_changed_at;
+  }
+}</code></pre>
+
+<p class="srcTitle">B-3 · ZBP_R_JMG_ORG_NODE <span class="pill">CLAS</span> — 전역 + 로컬 핸들러</p>
+<pre><code>CLASS zbp_r_jmg_org_node DEFINITION
+  PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF ZR_JMG_ORG_NODE.
+ENDCLASS.
+
+CLASS zbp_r_jmg_org_node IMPLEMENTATION.
+ENDCLASS.
+
+* --- Local Types (구현 인클루드) ---
+
+CLASS lhc_ZR_JMG_ORG_NODE DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+    METHODS checkSelfParent FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZR_JMG_ORG_NODE~checkSelfParent.
+
+    METHODS checkParentExists FOR VALIDATE ON SAVE
+      IMPORTING keys FOR ZR_JMG_ORG_NODE~checkParentExists.
+
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR ZR_JMG_ORG_NODE RESULT result.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR ZR_JMG_ORG_NODE RESULT result.
+ENDCLASS.
+
+CLASS lhc_ZR_JMG_ORG_NODE IMPLEMENTATION.
+  METHOD checkSelfParent.
+    READ ENTITIES OF ZR_JMG_ORG_NODE IN LOCAL MODE
+      ENTITY ZR_JMG_ORG_NODE
+        FIELDS ( NodeID ParentID )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_node).
+
+    LOOP AT lt_node INTO DATA(ls_node).
+      IF ls_node-NodeID = ls_node-ParentID.
+        APPEND VALUE #( %tky = ls_node-%tky ) TO failed-ZR_JMG_ORG_NODE.
+        APPEND VALUE #( %tky = ls_node-%tky
+                         %msg = NEW_MESSAGE( id       = 'ZJMG_ORG_MSG'
+                                              number   = '001'
+                                              v1       = ls_node-NodeID
+                                              severity = if_abap_behv_message=&gt;severity-error ) )
+               TO reported-ZR_JMG_ORG_NODE.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD checkParentExists.
+    READ ENTITIES OF ZR_JMG_ORG_NODE IN LOCAL MODE
+      ENTITY ZR_JMG_ORG_NODE
+        FIELDS ( NodeID ParentID )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_parent_check).
+
+    LOOP AT lt_parent_check INTO DATA(ls_check) WHERE ParentID IS NOT INITIAL.
+      SELECT SINGLE @abap_true
+        FROM zjmg_org_node
+        WHERE node_id = @ls_check-ParentID
+        INTO @DATA(lv_exists).
+
+      IF lv_exists &lt;&gt; abap_true.
+        APPEND VALUE #( %tky = ls_check-%tky ) TO failed-ZR_JMG_ORG_NODE.
+        APPEND VALUE #( %tky = ls_check-%tky
+                         %msg = NEW_MESSAGE( id       = 'ZJMG_ORG_MSG'
+                                              number   = '002'
+                                              v1       = ls_check-ParentID
+                                              severity = if_abap_behv_message=&gt;severity-error ) )
+               TO reported-ZR_JMG_ORG_NODE.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD get_global_authorizations.
+    result-%create = COND #( WHEN requested_authorizations-%create = if_abap_behv=&gt;mk-on
+                              THEN if_abap_behv=&gt;auth-allowed
+                              ELSE if_abap_behv=&gt;auth-unauthorized ).
+  ENDMETHOD.
+
+  METHOD get_instance_authorizations.
+    result = VALUE #( FOR key IN keys
+                       ( %tky    = key-%tky
+                         %update = COND #( WHEN requested_authorizations-%update = if_abap_behv=&gt;mk-on
+                                            THEN if_abap_behv=&gt;auth-allowed )
+                         %delete = COND #( WHEN requested_authorizations-%delete = if_abap_behv=&gt;mk-on
+                                            THEN if_abap_behv=&gt;auth-allowed ) ) ).
+  ENDMETHOD.
+ENDCLASS.</code></pre>
+
+<h3>C. 조회 — 트리</h3>
+
+<p class="srcTitle">C-1 · ZI_JMG_ORG_HIER <span class="pill">DDLS</span> — Hierarchy 정의</p>
+<pre><code>@EndUserText.label: 'Org Chart Hierarchy'
+define hierarchy ZI_JMG_ORG_HIER
+  as parent child hierarchy(
+    source
+      ZR_JMG_ORG_NODE
+      child to parent association _Parent
+      start where
+        ParentID is initial
+      siblings order by
+        OrgName ascending
+      multiple parents not allowed
+  )
+  {
+    key NodeID,
+        ParentID,
+        OrgName,
+        JobTitle
+  }</code></pre>
+
+<p class="srcTitle">C-2 · ZC_JMG_ORG_TREE <span class="pill">DDLS</span> — 조회 소비뷰</p>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Org Chart Tree'
+@OData.hierarchy.recursiveHierarchy: [{entity.name: 'ZI_JMG_ORG_HIER'}]
+define root view entity ZC_JMG_ORG_TREE
+  provider contract transactional_query
+  as projection on ZR_JMG_ORG_NODE
+{
+  key NodeID,
+      ParentID,
+      @UI.lineItem: [{ position: 10, label: 'Name' }]
+      OrgName,
+      @UI.lineItem: [{ position: 20, label: 'Job Title' }]
+      JobTitle,
+      _Parent : redirected to ZC_JMG_ORG_TREE
+}</code></pre>
+
+<p class="srcTitle">C-3 · ZC_JMG_ORG_TREE <span class="pill">BDEF</span> — 읽기 전용 프로젝션</p>
+<pre><code>projection;
+strict ( 2 );
+
+define behavior for ZC_JMG_ORG_TREE
+{
+  use association _Parent;
+}</code></pre>
+
+<p class="srcTitle">C-4 · ZUI_JMG_ORG_TREE_O4 <span class="pill">SRVD</span> — 바인딩은 동명 SRVB(OData V4 UI, 게시됨)</p>
+<pre><code>@EndUserText.label: 'Org Chart Tree Service'
+define service ZUI_JMG_ORG_TREE_O4 {
+  expose ZC_JMG_ORG_TREE as OrgTree;
+}</code></pre>
+
+<h3>D. 관리 — CRUD</h3>
+
+<p class="srcTitle">D-1 · ZI_JMG_ORG_VH <span class="pill">DDLS</span> — 값도움말</p>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Org Node Value Help'
+@Search.searchable: true
+define view entity ZI_JMG_ORG_VH
+  as select from zjmg_org_node
+{
+      @Search.defaultSearchElement: true
+      @UI.lineItem: [{ position: 10, label: 'Node ID' }]
+  key node_id   as NodeID,
+
+      @Search.defaultSearchElement: true
+      @UI.lineItem: [{ position: 20, label: 'Name' }]
+      org_name  as OrgName,
+
+      @UI.lineItem: [{ position: 30, label: 'Job Title' }]
+      job_title as JobTitle
+}</code></pre>
+
+<p class="srcTitle">D-2 · ZC_JMG_ORG_MAINT <span class="pill">DDLS</span> — CRUD 소비뷰</p>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Org Chart Node Maintenance'
+@Search.searchable: true
+define root view entity ZC_JMG_ORG_MAINT
+  provider contract transactional_query
+  as projection on ZR_JMG_ORG_NODE
+{
+      @UI.facet: [
+        {
+          id: 'GeneralFacet',
+          type: #FIELDGROUP_REFERENCE,
+          label: 'General Information',
+          targetQualifier: 'General',
+          position: 10
+        }
+      ]
+      @UI.lineItem: [{ position: 5, label: 'Node ID' }]
+      @UI.fieldGroup: [{ qualifier: 'General', position: 5, label: 'Node ID' }]
+  key NodeID,
+
+      @Consumption.valueHelpDefinition: [{
+        entity: { name: 'ZI_JMG_ORG_VH', element: 'NodeID' }
+      }]
+      @UI.lineItem: [{ position: 10, label: 'Parent' }]
+      @UI.fieldGroup: [{ qualifier: 'General', position: 20, label: 'Parent' }]
+      ParentID,
+
+      @UI.lineItem: [{ position: 20, label: 'Name' }]
+      @UI.fieldGroup: [{ qualifier: 'General', position: 10, label: 'Name' }]
+      @UI.selectionField: [{ position: 10 }]
+      @Search.defaultSearchElement: true
+      OrgName,
+
+      @UI.lineItem: [{ position: 30, label: 'Job Title' }]
+      @UI.fieldGroup: [{ qualifier: 'General', position: 30, label: 'Job Title' }]
+      JobTitle
+}</code></pre>
+
+<p class="srcTitle">D-3 · ZC_JMG_ORG_MAINT <span class="pill">BDEF</span> — CRUD 프로젝션</p>
+<pre><code>projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_JMG_ORG_MAINT
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Activate;
+  use action Discard;
+  use action Edit;
+  use action Prepare;
+  use action Resume;
+}</code></pre>
+
+<h3>E. 대량입력 — 엑셀 업로드 BO</h3>
+
+<p class="srcTitle">E-1 · ZJMG_ORG_UPLD <span class="pill">TABL</span></p>
+<pre><code>@EndUserText.label : 'Org Chart Excel Upload'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+define table zjmg_org_upld {
+  key client      : abap.clnt not null;
+  key upload_id   : sysuuid_x16 not null;
+  file_name       : abap.char(128);
+  mime_type       : abap.char(128);
+  attachment      : abap.rawstring(0);
+  upload_note     : abap.char(80);
+  last_changed_at : timestampl;
+}</code></pre>
+
+<p class="srcTitle">E-2 · ZJMG_ORG_UPLD_D <span class="pill">TABL</span> — 드래프트</p>
+<pre><code>@EndUserText.label : 'Org Chart Excel Upload (Draft)'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+define table zjmg_org_upld_d {
+  key client    : abap.clnt not null;
+  key UploadID  : sysuuid_x16 not null;
+  FileName      : abap.char(128);
+  MimeType      : abap.char(128);
+  Attachment    : abap.rawstring(0);
+  UploadNote    : abap.char(80);
+  LastChangedAt : timestampl;
+  "~min" : include sych_bdl_draft_admin_inc;
+}</code></pre>
+
+<p class="srcTitle">E-3 · ZR_JMG_ORG_UPLD <span class="pill">DDLS</span> — 루트 뷰</p>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Org Chart Excel Upload (Root)'
+define root view entity ZR_JMG_ORG_UPLD
+  as select from zjmg_org_upld
+{
+  key upload_id       as UploadID,
+      file_name       as FileName,
+      @Semantics.mimeType: true
+      mime_type       as MimeType,
+      @Semantics.largeObject: {
+        mimeType: 'MimeType',
+        fileName: 'FileName',
+        contentDispositionPreference: #ATTACHMENT
+      }
+      attachment      as Attachment,
+      upload_note     as UploadNote,
+      last_changed_at as LastChangedAt
+}</code></pre>
+
+<p class="srcTitle">E-4 · ZR_JMG_ORG_UPLD <span class="pill">BDEF</span></p>
+<pre><code>managed implementation in class zbp_r_jmg_org_upld unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZR_JMG_ORG_UPLD
+persistent table zjmg_org_upld
+draft table zjmg_org_upld_d
+lock master
+total etag LastChangedAt
+authorization master ( instance )
+{
+  create ( authorization : global );
+  update;
+  delete;
+
+  draft action Activate;
+  draft action Discard;
+  draft action Edit;
+  draft action Resume;
+  draft determine action Prepare;
+
+  field ( readonly, numbering : managed ) UploadID;
+
+  action processUpload result [1] $self;
+
+  mapping for zjmg_org_upld
+  {
+    UploadID      = upload_id;
+    FileName      = file_name;
+    MimeType      = mime_type;
+    Attachment    = attachment;
+    UploadNote    = upload_note;
+    LastChangedAt = last_changed_at;
+  }
+}</code></pre>
+
+<p class="srcTitle">E-5 · ZBP_R_JMG_ORG_UPLD <span class="pill">CLAS</span> — 전역 + 로컬 핸들러</p>
+<pre><code>CLASS zbp_r_jmg_org_upld DEFINITION
+  PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF ZR_JMG_ORG_UPLD.
+ENDCLASS.
+
+CLASS zbp_r_jmg_org_upld IMPLEMENTATION.
+ENDCLASS.
+
+* --- Local Types (구현 인클루드) ---
+
+CLASS lhc_ZR_JMG_ORG_UPLD DEFINITION INHERITING FROM cl_abap_behavior_handler.
+  PRIVATE SECTION.
+    TYPES: BEGIN OF ty_xlsx_row,
+             node_id   TYPE zjmg_org_node_id,
+             parent_id TYPE zjmg_org_node_id,
+             org_name  TYPE zjmg_org_name,
+             job_title TYPE zjmg_org_title,
+           END OF ty_xlsx_row.
+
+    METHODS get_global_authorizations FOR GLOBAL AUTHORIZATION
+      IMPORTING REQUEST requested_authorizations FOR ZR_JMG_ORG_UPLD RESULT result.
+
+    METHODS get_instance_authorizations FOR INSTANCE AUTHORIZATION
+      IMPORTING keys REQUEST requested_authorizations FOR ZR_JMG_ORG_UPLD RESULT result.
+
+    METHODS processUpload FOR MODIFY
+      IMPORTING keys FOR ACTION ZR_JMG_ORG_UPLD~processUpload RESULT result.
+ENDCLASS.
+
+CLASS lhc_ZR_JMG_ORG_UPLD IMPLEMENTATION.
+  METHOD get_global_authorizations.
+    result-%create = COND #( WHEN requested_authorizations-%create = if_abap_behv=&gt;mk-on
+                              THEN if_abap_behv=&gt;auth-allowed
+                              ELSE if_abap_behv=&gt;auth-unauthorized ).
+  ENDMETHOD.
+
+  METHOD get_instance_authorizations.
+    result = VALUE #( FOR key IN keys
+                       ( %tky    = key-%tky
+                         %update = COND #( WHEN requested_authorizations-%update = if_abap_behv=&gt;mk-on
+                                            THEN if_abap_behv=&gt;auth-allowed )
+                         %delete = COND #( WHEN requested_authorizations-%delete = if_abap_behv=&gt;mk-on
+                                            THEN if_abap_behv=&gt;auth-allowed ) ) ).
+  ENDMETHOD.
+
+  METHOD processUpload.
+    READ ENTITIES OF ZR_JMG_ORG_UPLD IN LOCAL MODE
+      ENTITY ZR_JMG_ORG_UPLD
+        ALL FIELDS WITH CORRESPONDING #( keys )
+      RESULT DATA(lt_upload).
+
+    LOOP AT lt_upload INTO DATA(ls_upload).
+      IF ls_upload-Attachment IS INITIAL.
+        APPEND VALUE #( %tky = ls_upload-%tky ) TO failed-ZR_JMG_ORG_UPLD.
+        APPEND VALUE #( %tky = ls_upload-%tky
+                         %msg = NEW_MESSAGE_WITH_TEXT(
+                                  text     = 'No file attached'
+                                  severity = if_abap_behv_message=&gt;severity-error ) )
+               TO reported-ZR_JMG_ORG_UPLD.
+        CONTINUE.
+      ENDIF.
+
+      DATA lt_rows TYPE STANDARD TABLE OF ty_xlsx_row WITH EMPTY KEY.
+      CLEAR lt_rows.
+
+      TRY.
+          xco_cp_xlsx=&gt;document-&gt;for_file_content( ls_upload-Attachment
+            )-&gt;read_access( )-&gt;get_workbook(
+            )-&gt;worksheet-&gt;at_position( 1
+            )-&gt;select( xco_cp_xlsx_selection=&gt;pattern_builder-&gt;simple_from_to(
+                )-&gt;from_column( xco_cp_xlsx=&gt;coordinate-&gt;for_alphabetic_value( 'A' )
+                )-&gt;to_column( xco_cp_xlsx=&gt;coordinate-&gt;for_alphabetic_value( 'D' )
+                )-&gt;from_row( xco_cp_xlsx=&gt;coordinate-&gt;for_numeric_value( 2 )
+                )-&gt;get_pattern( )
+            )-&gt;row_stream(
+            )-&gt;operation-&gt;write_to( REF #( lt_rows )
+            )-&gt;if_xco_xlsx_ra_operation~execute( ).
+        CATCH cx_root INTO DATA(lx_xlsx).
+          APPEND VALUE #( %tky = ls_upload-%tky ) TO failed-ZR_JMG_ORG_UPLD.
+          APPEND VALUE #( %tky = ls_upload-%tky
+                           %msg = NEW_MESSAGE_WITH_TEXT(
+                                    text     = 'File could not be parsed as XLSX'
+                                    severity = if_abap_behv_message=&gt;severity-error ) )
+                 TO reported-ZR_JMG_ORG_UPLD.
+          CONTINUE.
+      ENDTRY.
+
+      " Trim stray whitespace from Excel cells (very common in real files):
+      " IDs must not contain any blanks; texts keep internal single spaces.
+      LOOP AT lt_rows ASSIGNING FIELD-SYMBOL(&lt;ls_row&gt;).
+        CONDENSE &lt;ls_row&gt;-node_id NO-GAPS.
+        CONDENSE &lt;ls_row&gt;-parent_id NO-GAPS.
+        CONDENSE &lt;ls_row&gt;-org_name.
+        CONDENSE &lt;ls_row&gt;-job_title.
+      ENDLOOP.
+
+      DELETE lt_rows WHERE node_id IS INITIAL.
+
+      IF lt_rows IS INITIAL.
+        APPEND VALUE #( %tky = ls_upload-%tky ) TO failed-ZR_JMG_ORG_UPLD.
+        APPEND VALUE #( %tky = ls_upload-%tky
+                         %msg = NEW_MESSAGE_WITH_TEXT(
+                                  text     = 'No data rows found (data starts at row 2)'
+                                  severity = if_abap_behv_message=&gt;severity-error ) )
+               TO reported-ZR_JMG_ORG_UPLD.
+        CONTINUE.
+      ENDIF.
+
+      MODIFY ENTITIES OF ZR_JMG_ORG_NODE
+        ENTITY ZR_JMG_ORG_NODE
+          CREATE AUTO FILL CID
+          FIELDS ( NodeID ParentID OrgName JobTitle )
+          WITH VALUE #( FOR ls_row IN lt_rows
+                         ( NodeID   = ls_row-node_id
+                           ParentID = ls_row-parent_id
+                           OrgName  = ls_row-org_name
+                           JobTitle = ls_row-job_title ) )
+        MAPPED DATA(ls_mapped)
+        FAILED DATA(ls_failed)
+        REPORTED DATA(ls_reported).
+
+      IF ls_failed-zr_jmg_org_node IS NOT INITIAL.
+        APPEND VALUE #( %tky = ls_upload-%tky ) TO failed-ZR_JMG_ORG_UPLD.
+        APPEND VALUE #( %tky = ls_upload-%tky
+                         %msg = NEW_MESSAGE_WITH_TEXT(
+                                  text     = 'Some rows could not be created (check keys/duplicates)'
+                                  severity = if_abap_behv_message=&gt;severity-error ) )
+               TO reported-ZR_JMG_ORG_UPLD.
+        CONTINUE.
+      ENDIF.
+
+      APPEND VALUE #( %tky = ls_upload-%tky
+                       %msg = NEW_MESSAGE_WITH_TEXT(
+                                text     = |{ lines( lt_rows ) } nodes created from file|
+                                severity = if_abap_behv_message=&gt;severity-success ) )
+             TO reported-ZR_JMG_ORG_UPLD.
+
+      APPEND VALUE #( %tky   = ls_upload-%tky
+                      %param = ls_upload ) TO result.
+    ENDLOOP.
+  ENDMETHOD.
+ENDCLASS.</code></pre>
+
+<p class="srcTitle">E-6 · ZC_JMG_ORG_UPLD <span class="pill">DDLS</span> — 업로드 소비뷰</p>
+<pre><code>@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Org Chart Excel Upload'
+define root view entity ZC_JMG_ORG_UPLD
+  provider contract transactional_query
+  as projection on ZR_JMG_ORG_UPLD
+{
+      @UI.facet: [
+        {
+          id: 'UploadFacet',
+          type: #FIELDGROUP_REFERENCE,
+          label: 'Upload File',
+          targetQualifier: 'Upload',
+          position: 10
+        }
+      ]
+      @UI.lineItem: [
+        { position: 10, label: 'Upload ID' },
+        { type: #FOR_ACTION, dataAction: 'processUpload', label: 'Process Upload' }
+      ]
+      @UI.identification: [
+        { type: #FOR_ACTION, dataAction: 'processUpload', label: 'Process Upload' }
+      ]
+  key UploadID,
+
+      @UI.lineItem: [{ position: 20, label: 'File Name' }]
+      FileName,
+
+      MimeType,
+
+      @UI.fieldGroup: [{ qualifier: 'Upload', position: 10, label: 'Excel File (cols A-D, data from row 2)' }]
+      Attachment,
+
+      @UI.lineItem: [{ position: 30, label: 'Note' }]
+      @UI.fieldGroup: [{ qualifier: 'Upload', position: 20, label: 'Note' }]
+      UploadNote
+}</code></pre>
+
+<p class="srcTitle">E-7 · ZC_JMG_ORG_UPLD <span class="pill">BDEF</span> — 업로드 프로젝션</p>
+<pre><code>projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_JMG_ORG_UPLD
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Activate;
+  use action Discard;
+  use action Edit;
+  use action Prepare;
+  use action Resume;
+
+  use action processUpload;
+}</code></pre>
+
+<p class="srcTitle">E-8 · ZUI_JMG_ORG_MAINT_O4 <span class="pill">SRVD</span> — 바인딩은 동명 SRVB(OData V4 UI, 게시됨)</p>
+<pre><code>@EndUserText.label: 'Org Chart Node Maintenance Service'
+define service ZUI_JMG_ORG_MAINT_O4 {
+  expose ZC_JMG_ORG_MAINT as OrgMaint;
+  expose ZC_JMG_ORG_UPLD as OrgUpload;
+}</code></pre>
+
+<div class="note"><b>마지막으로</b> — 이 부록의 소스만으로 어떤 trial 인스턴스에서든 전체 스택을
+다시 세울 수 있습니다. 백엔드는 이미 실무 구성의 절반입니다. 다음 정거장은 BAS —
+이 백엔드 위에 진짜 Fiori 앱을 얹는 일입니다.</div>
+
+<footer>
+RAP 실전 3부작 — 1부 <span class="pill">11_btp_rap_orgchart_build.html</span> · 2부 <span class="pill">12_btp_rap_orgchart_code.html</span> · 3부(본 문서)<br>
+BTP Trial ABAP Environment (TRL) · 패키지 ZJMG_ORG_TREE · 로컬 백업 <span class="pill">btp-trial/src/org-tree/</span> · 2026-07 실측 기준
+</footer>
+</div>
+</body>
+</html>
